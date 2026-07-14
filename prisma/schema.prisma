@@ -1,0 +1,167 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  passwordHash  String
+  phone         String?  @unique
+  phoneVerified Boolean  @default(false)
+  role          String   @default("BUYER")
+  name          String
+  avatar        String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  producer      Producer?
+  orders        Order[]
+  reviews       Review[]
+  reports       Report[]
+}
+
+model OtpCode {
+  id        String   @id @default(cuid())
+  phone     String
+  code      String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Producer {
+  id                 String    @id @default(cuid())
+  userId             String    @unique
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessName       String
+  businessNameSi     String
+  description        String?
+  descriptionSi      String?
+  location           String
+  district           String
+  phone              String
+  verificationStatus String    @default("PENDING")
+  verifiedAt         DateTime?
+  rating             Float     @default(0)
+  totalReviews       Int       @default(0)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  products           Product[]
+  offers             Offer[]
+}
+
+model Category {
+  id            String   @id @default(cuid())
+  name          String
+  nameSi        String
+  slug          String   @unique
+  description   String?
+  descriptionSi String?
+  image         String?
+  createdAt     DateTime @default(now())
+
+  products      Product[]
+}
+
+model Product {
+  id            String   @id @default(cuid())
+  producerId    String
+  producer      Producer @relation(fields: [producerId], references: [id], onDelete: Cascade)
+  categoryId    String
+  category      Category @relation(fields: [categoryId], references: [id])
+  name          String
+  nameSi        String
+  description   String
+  descriptionSi String
+  price         Float
+  originalPrice Float?
+  unit          String
+  unitSi        String
+  images        String   @default("[]")
+  stock         Int      @default(0)
+  rating        Float    @default(0)
+  totalReviews  Int      @default(0)
+  active        Boolean  @default(true)
+  flagged       Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  orderItems    OrderItem[]
+  reviews       Review[]
+  reports       Report[]
+}
+
+model Order {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  status          String   @default("PENDING")
+  totalAmount     Float
+  paymentMethod   String
+  paymentDone     Boolean  @default(false)
+  shippingName    String
+  shippingPhone   String
+  shippingAddress String
+  shippingCity    String
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  items           OrderItem[]
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  price     Float
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  rating    Int
+  comment   String?
+  approved  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+}
+
+model Offer {
+  id              String   @id @default(cuid())
+  producerId      String
+  producer        Producer @relation(fields: [producerId], references: [id], onDelete: Cascade)
+  title           String
+  titleSi         String
+  description     String
+  descriptionSi   String
+  discountPercent Int
+  startDate       DateTime
+  endDate         DateTime
+  status          String   @default("PENDING")
+  createdAt       DateTime @default(now())
+}
+
+model Report {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  reason    String
+  resolved  Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
