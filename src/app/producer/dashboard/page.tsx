@@ -24,6 +24,10 @@ interface Product {
   active: boolean;
   flagged: boolean;
   rating: number;
+  sourceUrl: string | null;
+  syncStatus: string | null;
+  lastSyncAt: string | null;
+  externalStock: string | null;
 }
 
 interface Order {
@@ -42,6 +46,7 @@ export default function ProducerDashboard() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"listings" | "orders" | "offers">("listings");
+  const [syncing, setSyncing] = useState<string | null>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -49,7 +54,7 @@ export default function ProducerDashboard() {
       return;
     }
     if (status === "authenticated") {
-      const role = (session?.user as Record<string, { role?: string }>)?.role;
+      const role = session?.user?.role;
       if (role !== "PRODUCER") {
         router.push("/");
         return;
@@ -70,6 +75,45 @@ export default function ProducerDashboard() {
 
   if (loading) {
     return <div className="page-container text-center text-gray-500">Loading...</div>;
+  }
+
+  async function handleSync(productId: string) {
+    setSyncing(productId);
+    try {
+      const res = await fetch(`/api/products/${productId}/sync`, { method: "POST" });
+      if (res.ok) {
+        const data = await res.json();
+        setProducts((prev) =>
+          prev.map((p) =>
+            p.id === productId
+              ? { ...p, lastSyncAt: new Date().toISOString(), externalStock: data.newStock }
+              : p
+          )
+        );
+        alert(data.message);
+      }
+    } catch {
+      alert("Sync failed");
+    }
+    setSyncing(null);
+  }
+
+  async function handleToggleSync(productId: string, currentStatus: string) {
+    const newStatus = currentStatus === "active" ? "paused" : "active";
+    try {
+      const res = await fetch(`/api/products/${productId}/sync`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ syncStatus: newStatus }),
+      });
+      if (res.ok) {
+        setProducts((prev) =>
+          prev.map((p) => (p.id === productId ? { ...p, syncStatus: newStatus } : p))
+        );
+      }
+    } catch {
+      alert("Failed to update sync status");
+    }
   }
 
   return (
@@ -132,6 +176,49 @@ export default function ProducerDashboard() {
                   </div>
                   <p className="text-primary font-bold mb-2">Rs. {product.price}</p>
                   <p className="text-sm text-gray-500 mb-2">Stock: {product.stock}</p>
+                  {product.sourceUrl && (
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${
+                        product.syncStatus === "active"
+                          ? "bg-green-100 text-green-700"
+                          : product.syncStatus === "error"
+                          ? "bg-red-100 text-red-700"
+                          : "bg-gray-100 text-gray-500"
+                      }`}>
+                        {product.syncStatus === "active"
+                          ? "Auto-sync ON"
+                          : product.syncStatus === "error"
+                          ? "Sync Error"
+                          : "Auto-sync OFF"}
+                      </span>
+                      {product.externalStock && (
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${
+                          product.externalStock === "in_stock"
+                            ? "bg-blue-100 text-blue-700"
+                            : product.externalStock === "out_of_stock"
+                            ? "bg-orange-100 text-orange-700"
+                            : "bg-gray-100 text-gray-500"
+                        }`}>
+                          Source: {product.externalStock === "in_stock" ? "In Stock" : product.externalStock === "out_of_stock" ? "Out of Stock" : "Unknown"}
+                        </span>
+                      )}
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => handleSync(product.id)}
+                          disabled={syncing === product.id}
+                          className="text-xs px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded hover:bg-emerald-200 disabled:opacity-50"
+                        >
+                          {syncing === product.id ? "..." : "Sync Now"}
+                        </button>
+                        <button
+                          onClick={() => handleToggleSync(product.id, product.syncStatus || "paused")}
+                          className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded hover:bg-gray-200"
+                        >
+                          {product.syncStatus === "active" ? "Pause" : "Resume"}
+                        </button>
+                      </div>
+                    </div>
+                  )}
                   <div className="flex items-center justify-between">
                     <span className={`text-xs font-medium ${product.active ? "text-green-600" : "text-red-600"}`}>
                       {product.active ? "Active" : "Inactive"}

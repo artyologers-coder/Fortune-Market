@@ -89,12 +89,32 @@ model Product {
   totalReviews  Int      @default(0)
   active        Boolean  @default(true)
   flagged       Boolean  @default(false)
+  sourceUrl     String?
+  sourceSite    String?
+  lastSyncAt    DateTime?
+  syncStatus    String?  @default("paused")
+  externalPrice Float?
+  externalStock String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   orderItems    OrderItem[]
   reviews       Review[]
   reports       Report[]
+  syncLogs      StockSyncLog[]
+}
+
+model StockSyncLog {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  status    String
+  message   String?
+  oldPrice  Float?
+  newPrice  Float?
+  oldStock  String?
+  newStock  String?
+  createdAt DateTime @default(now())
 }
 
 model Order {

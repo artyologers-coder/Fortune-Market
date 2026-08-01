@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Providers } from "@/components/providers";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { SyncInitializer } from "@/components/sync-initializer";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -17,6 +18,7 @@ export default function RootLayout({
   return (
     <html lang="si">
       <body>
+        <SyncInitializer />
         <Providers>
           <div className="min-h-screen flex flex-col">
             <Header />

@@ -10,7 +10,7 @@ export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const cartCount = useCartCount();
 
-  const role = (session?.user as Record<string, { role?: string }>)?.role;
+  const role = session?.user?.role;
 
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50">

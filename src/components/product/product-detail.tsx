@@ -19,6 +19,9 @@ interface ProductDetailProps {
     rating: number;
     totalReviews: number;
     images: string[];
+    sourceUrl: string | null;
+    externalStock: string | null;
+    lastSyncAt: string | null;
     producer: {
       id: string;
       businessName: string;
@@ -138,6 +141,24 @@ export function ProductDetail({ product }: ProductDetailProps) {
             <span className="text-green-600 text-sm font-medium">✓ In Stock ({product.stock} available)</span>
           ) : (
             <span className="text-red-600 text-sm font-medium">Out of Stock</span>
+          )}
+          {product.sourceUrl && product.externalStock && (
+            <div className="mt-1">
+              <span className={`text-xs ${
+                product.externalStock === "in_stock"
+                  ? "text-blue-600"
+                  : product.externalStock === "out_of_stock"
+                  ? "text-orange-600"
+                  : "text-gray-500"
+              }`}>
+                Source: {product.externalStock === "in_stock" ? "Available on source" : product.externalStock === "out_of_stock" ? "Unavailable on source" : "Source status unknown"}
+                {product.lastSyncAt && (
+                  <span className="text-gray-400 ml-1">
+                    (synced {new Date(product.lastSyncAt).toLocaleDateString()})
+                  </span>
+                )}
+              </span>
+            </div>
           )}
         </div>
 

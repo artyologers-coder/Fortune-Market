@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
           unit: body.productUnit || "piece",
           unitSi: body.productUnitSi || "කැබැල්ල",
           stock: parseInt(body.productStock) || 0,
-          images: [],
+          images: "[]",
         },
       });
     }

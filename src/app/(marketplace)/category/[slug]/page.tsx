@@ -2,6 +2,11 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
+import type { Prisma } from "@prisma/client";
+
+type ProductWithProducer = Prisma.ProductGetPayload<{
+  include: { producer: { include: { user: { select: { name: true } } } } };
+}>;
 
 interface Props {
   params: { slug: string };
@@ -29,7 +34,7 @@ export default async function CategoryPage({ params }: Props) {
 
   if (!category) notFound();
 
-  let products = [];
+  let products: ProductWithProducer[] = [];
   try {
     products = await prisma.product.findMany({
       where: { categoryId: category.id, active: true, flagged: false },

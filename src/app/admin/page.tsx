@@ -45,7 +45,7 @@ export default function AdminPage() {
       return;
     }
     if (status === "authenticated") {
-      const role = (session?.user as Record<string, { role?: string }>)?.role;
+      const role = session?.user?.role;
       if (role !== "ADMIN") {
         router.push("/");
         return;
