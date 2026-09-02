@@ -2,11 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { syncAllActiveProducts } from "@/lib/stock-sync";
-import {
-  startSyncScheduler,
-  stopSyncScheduler,
-  getSyncSchedulerStatus,
-} from "@/lib/sync-scheduler";
+import { getWorkerStatus } from "@/lib/reseller/worker-status";
 
 export async function GET() {
   try {
@@ -15,7 +11,7 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const status = getSyncSchedulerStatus();
+    const status = getWorkerStatus();
     return NextResponse.json(status);
   } catch (error) {
     console.error("Sync status error:", error);
@@ -36,16 +32,6 @@ export async function POST(req: NextRequest) {
     if (action === "sync_all") {
       const results = await syncAllActiveProducts();
       return NextResponse.json({ results });
-    }
-
-    if (action === "start") {
-      startSyncScheduler();
-      return NextResponse.json({ message: "Scheduler started" });
-    }
-
-    if (action === "stop") {
-      stopSyncScheduler();
-      return NextResponse.json({ message: "Scheduler stopped" });
     }
 
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });

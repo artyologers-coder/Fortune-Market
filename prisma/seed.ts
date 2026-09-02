@@ -11,7 +11,7 @@ async function main() {
   const categories = await Promise.all([
     prisma.category.upsert({
       where: { slug: "foods" },
-      update: {},
+      update: { markupPercentage: 15 },
       create: {
         name: "Fortune Foods",
         nameSi: "ෆෝචුන් ආහාර",
@@ -19,11 +19,12 @@ async function main() {
         description: "Natural food products from Sri Lankan producers",
         descriptionSi: "ශ්‍රී ලාංකික නිෂ්පාදකයින්ගෙන් ස්වාභාවික ආහාර නිෂ්පාදන",
         image: "/images/categories/foods.jpg",
+        markupPercentage: 15,
       },
     }),
     prisma.category.upsert({
       where: { slug: "crafts" },
-      update: {},
+      update: { markupPercentage: 20 },
       create: {
         name: "Fortune Crafts",
         nameSi: "ෆෝචුන් වෙළඳ භාණ්ඩ",
@@ -31,11 +32,12 @@ async function main() {
         description: "Handcrafted goods from local artisans",
         descriptionSi: "දේශීය වැඩ කරුවන්ගෙන් අත්පැති වෙළඳ භාණ්ඩ",
         image: "/images/categories/crafts.jpg",
+        markupPercentage: 20,
       },
     }),
     prisma.category.upsert({
       where: { slug: "naturals" },
-      update: {},
+      update: { markupPercentage: 25 },
       create: {
         name: "Fortune Naturals",
         nameSi: "ෆෝචුන් ස්වාභාවික",
@@ -43,11 +45,12 @@ async function main() {
         description: "Natural personal care and wellness products",
         descriptionSi: "ස්වාභාවික පුද්ගලික සත්කාර හා සුවය නිෂ්පාදන",
         image: "/images/categories/naturals.jpg",
+        markupPercentage: 25,
       },
     }),
     prisma.category.upsert({
       where: { slug: "fashion" },
-      update: {},
+      update: { markupPercentage: 30 },
       create: {
         name: "Fortune Fashion",
         nameSi: "ෆෝචුන් විලාසිතා",
@@ -55,6 +58,7 @@ async function main() {
         description: "Local fashion and traditional clothing",
         descriptionSi: "දේශීය විලාසිතා හා සම්ප්‍රදායික ඇඳුම්",
         image: "/images/categories/fashion.jpg",
+        markupPercentage: 30,
       },
     }),
   ]);
@@ -95,6 +99,19 @@ async function main() {
       phoneVerified: true,
       role: "PRODUCER",
       name: "Sunil Fernando",
+    },
+  });
+
+  const resellerUser = await prisma.user.upsert({
+    where: { email: "reseller@fortune.lk" },
+    update: {},
+    create: {
+      email: "reseller@fortune.lk",
+      passwordHash,
+      phone: "+94770000000",
+      phoneVerified: true,
+      role: "PRODUCER",
+      name: "Fortune Market Reseller",
     },
   });
 
@@ -151,6 +168,38 @@ async function main() {
       verificationStatus: "PENDING",
       rating: 0,
       totalReviews: 0,
+    },
+  });
+
+  const resellerProducer = await prisma.producer.upsert({
+    where: { userId: resellerUser.id },
+    update: {},
+    create: {
+      userId: resellerUser.id,
+      businessName: "Fortune Market Reseller",
+      businessNameSi: "ෆෝචුන් වෙළඳපොළ වික්‍රේතා",
+      description: "Official reseller account for imported products",
+      descriptionSi: "ආනයන් නිෂ්පාදන සඳහා නියෝජිත රිසෙලර් ගිණුම",
+      location: "Colombo",
+      district: "Colombo",
+      phone: "+94770000000",
+      verificationStatus: "APPROVED",
+      verifiedAt: new Date(),
+      rating: 5.0,
+      totalReviews: 0,
+    },
+  });
+
+  await prisma.scraperDomainProfile.upsert({
+    where: { domain: "shopzy.lk" },
+    update: {},
+    create: {
+      domain: "shopzy.lk",
+      strategy: "auto",
+      selectorConfig: null,
+      requiresJsRender: true,
+      supplierWhatsAppNumber: "+94770000000",
+      lastVerifiedAt: new Date(),
     },
   });
 
@@ -269,16 +318,18 @@ async function main() {
   });
 
   console.log("Seed completed:");
-  console.log("  Categories: 4");
-  console.log("  Producers: 3 (2 verified, 1 pending)");
+  console.log("  Categories: 4 (with markup percentages)");
+  console.log("  Producers: 4 (3 regular + 1 reseller, all verified except 1)");
   console.log("  Products: 5");
+  console.log("  ScraperDomainProfile: shopzy.lk");
   console.log("");
   console.log("  Demo accounts (password: password123):");
-  console.log("  Buyer:   buyer@fortune.lk");
-  console.log("  Producer: kamal@fortune.lk");
-  console.log("  Producer: nimali@fortune.lk");
-  console.log("  Producer: sunil@fortune.lk (pending verification)");
-  console.log("  Admin:   admin@fortune.lk");
+  console.log("  Buyer:       buyer@fortune.lk");
+  console.log("  Producer:    kamal@fortune.lk");
+  console.log("  Producer:    nimali@fortune.lk");
+  console.log("  Producer:    sunil@fortune.lk (pending verification)");
+  console.log("  Reseller:    reseller@fortune.lk");
+  console.log("  Admin:       admin@fortune.lk");
 }
 
 main()

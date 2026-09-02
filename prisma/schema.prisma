@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -57,16 +57,17 @@ model Producer {
 }
 
 model Category {
-  id            String   @id @default(cuid())
-  name          String
-  nameSi        String
-  slug          String   @unique
-  description   String?
-  descriptionSi String?
-  image         String?
-  createdAt     DateTime @default(now())
+  id                String   @id @default(cuid())
+  name              String
+  nameSi            String
+  slug              String   @unique
+  description       String?
+  descriptionSi     String?
+  image             String?
+  markupPercentage  Float    @default(15)
+  createdAt         DateTime @default(now())
 
-  products      Product[]
+  products          Product[]
 }
 
 model Product {
@@ -102,6 +103,7 @@ model Product {
   reviews       Review[]
   reports       Report[]
   syncLogs      StockSyncLog[]
+  resellerSource ResellerSource?
 }
 
 model StockSyncLog {
@@ -117,23 +119,55 @@ model StockSyncLog {
   createdAt DateTime @default(now())
 }
 
-model Order {
+model ResellerSource {
   id              String   @id @default(cuid())
-  userId          String
-  user            User     @relation(fields: [userId], references: [id])
-  status          String   @default("PENDING")
-  totalAmount     Float
-  paymentMethod   String
-  paymentDone     Boolean  @default(false)
-  shippingName    String
-  shippingPhone   String
-  shippingAddress String
-  shippingCity    String
-  notes           String?
+  productId       String   @unique
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  sourceUrl       String
+  sourceDomain    String
+  sourceName      String?
+  sourcePrice     Float
+  sourceStock     Int?
+  sourceStatus    String   @default("ACTIVE") // ACTIVE, OUT_OF_STOCK, UNREACHABLE, REMOVED
+  sourceRawData   String?
+  lastScrapedAt   DateTime?
+  lastSyncError   String?
+  syncFailCount   Int      @default(0)
+  requiresReview  Boolean  @default(false)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+}
 
-  items           OrderItem[]
+model ScraperDomainProfile {
+  id                     String   @id @default(cuid())
+  domain                 String   @unique
+  strategy               String   @default("json-ld")
+  selectorConfig         String?
+  requiresJsRender       Boolean  @default(true)
+  supplierWhatsAppNumber String?
+  lastVerifiedAt         DateTime?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+}
+
+model Order {
+  id                     String   @id @default(cuid())
+  userId                 String
+  user                   User     @relation(fields: [userId], references: [id])
+  status                 String   @default("PENDING")
+  totalAmount            Float
+  paymentMethod          String
+  paymentDone            Boolean  @default(false)
+  shippingName           String
+  shippingPhone          String
+  shippingAddress        String
+  shippingCity           String
+  notes                  String?
+  forwardedToSupplierAt  DateTime?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  items                  OrderItem[]
 }
 
 model OrderItem {

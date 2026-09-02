@@ -13,6 +13,12 @@ interface OrderItem {
     name: string;
     nameSi: string;
     images: string[];
+    resellerSource?: {
+      sourceUrl: string;
+      sourceDomain: string;
+      sourcePrice: number;
+      supplierWhatsAppNumber?: string;
+    } | null;
   };
 }
 
@@ -23,6 +29,8 @@ interface Order {
   paymentMethod: string;
   createdAt: string;
   shippingName: string;
+  shippingPhone: string;
+  shippingAddress: string;
   shippingCity: string;
   items: OrderItem[];
 }
@@ -34,6 +42,7 @@ const STATUS_COLORS: Record<string, string> = {
   SHIPPED: "bg-purple-100 text-purple-800",
   DELIVERED: "bg-green-100 text-green-800",
   CANCELLED: "bg-red-100 text-red-800",
+  FORWARDED_TO_SUPPLIER: "bg-blue-100 text-blue-800",
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -43,6 +52,7 @@ const STATUS_LABELS: Record<string, string> = {
   SHIPPED: "Shipped",
   DELIVERED: "Delivered",
   CANCELLED: "Cancelled",
+  FORWARDED_TO_SUPPLIER: "Forwarded to Supplier",
 };
 
 export default function OrdersPage() {
@@ -114,6 +124,50 @@ export default function OrdersPage() {
                   </div>
                 ))}
               </div>
+
+              {order.items.some((item) => item.product.resellerSource) && (
+                <div className="border-t pt-4 mt-4 space-y-3">
+                  <h4 className="text-sm font-medium text-gray-700">Reseller Order Items</h4>
+                  {order.items
+                    .filter((item) => item.product.resellerSource)
+                    .map((item) => {
+                      const source = item.product.resellerSource!;
+                      const waNumber = source.supplierWhatsAppNumber?.replace(/\D/g, "") || "";
+                      const message = `New Fortune Market Order\n\nProduct: ${item.product.nameSi}\nSource: ${source.sourceUrl}\nQuantity: ${item.quantity}\nSelling Price: Rs. ${item.price}\nSource Price: Rs. ${source.sourcePrice}\nCustomer: ${order.shippingName}\nPhone: ${order.shippingPhone}\nAddress: ${order.shippingAddress}, ${order.shippingCity}\n\nPlease process this order.`;
+                      const waLink = waNumber ? `https://wa.me/${waNumber}?text=${encodeURIComponent(message)}` : null;
+
+                      return (
+                        <div key={item.id} className="bg-blue-50 border border-blue-100 rounded-lg p-3">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-medium text-blue-700">Source: {source.sourceDomain}</span>
+                            <span className="text-xs text-gray-500">Rs. {source.sourcePrice.toLocaleString()} (source)</span>
+                          </div>
+                          <p className="text-xs text-gray-600 mb-2">
+                            Source URL: <a href={source.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline truncate block">{source.sourceUrl}</a>
+                          </p>
+                          {waLink && (
+                            <div className="flex gap-2">
+                              <a
+                                href={waLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs px-3 py-1.5 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                              >
+                                📱 Forward to Supplier (WhatsApp)
+                              </a>
+                              <button
+                                onClick={() => navigator.clipboard.writeText(message)}
+                                className="text-xs px-3 py-1.5 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
+                              >
+                                Copy Message
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
 
               <div className="border-t pt-3 mt-3 text-xs text-gray-500">
                 <p>Ship to: {order.shippingName}, {order.shippingCity}</p>

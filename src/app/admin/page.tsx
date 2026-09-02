@@ -30,14 +30,30 @@ interface Product {
   active: boolean;
 }
 
+interface Order {
+  id: string;
+  status: string;
+  totalAmount: number;
+  createdAt: string;
+  shippingName: string;
+  shippingCity: string;
+  user: { name: string; email: string };
+  items: Array<{
+    quantity: number;
+    price: number;
+    product: { nameSi: string; resellerSource?: { sourceDomain: string } | null };
+  }>;
+}
+
 export default function AdminPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [stats, setStats] = useState<Stats | null>(null);
   const [pendingProducers, setPendingProducers] = useState<Producer[]>([]);
   const [flaggedProducts, setFlaggedProducts] = useState<Product[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"overview" | "verification" | "moderation">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "verification" | "moderation" | "reseller-import" | "reseller-products" | "reseller-settings" | "orders" | "add-product">("overview");
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -56,10 +72,11 @@ export default function AdminPage() {
 
   async function fetchData() {
     try {
-      const [statsRes, producersRes, productsRes] = await Promise.all([
+      const [statsRes, producersRes, productsRes, ordersRes] = await Promise.all([
         fetch("/api/admin"),
         fetch("/api/admin/producers"),
         fetch("/api/admin/products"),
+        fetch("/api/orders"),
       ]);
 
       if (statsRes.ok) {
@@ -75,6 +92,11 @@ export default function AdminPage() {
       if (productsRes.ok) {
         const data = await productsRes.json();
         setFlaggedProducts(data.products || []);
+      }
+
+      if (ordersRes.ok) {
+        const data = await ordersRes.json();
+        setOrders(data.orders || []);
       }
     } catch {
       console.error("Failed to fetch admin data");
@@ -117,7 +139,7 @@ export default function AdminPage() {
       <h1 className="text-3xl font-bold text-gray-900 mb-8">Admin Panel</h1>
 
       <div className="flex gap-2 mb-6 border-b border-gray-200">
-        {(["overview", "verification", "moderation"] as const).map((tab) => (
+        {(["overview", "verification", "moderation", "orders", "reseller-import", "reseller-products", "reseller-settings", "add-product"] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -127,7 +149,7 @@ export default function AdminPage() {
                 : "border-transparent text-gray-500 hover:text-gray-700"
             }`}
           >
-            {tab === "overview" ? "Overview" : tab === "verification" ? "Verification" : "Moderation"}
+            {tab === "overview" ? "Overview" : tab === "verification" ? "Verification" : tab === "moderation" ? "Moderation" : tab === "orders" ? "Orders" : tab === "reseller-import" ? "Reseller Import" : tab === "reseller-products" ? "Reseller Products" : tab === "reseller-settings" ? "Reseller Settings" : "Add Product"}
           </button>
         ))}
       </div>
@@ -220,6 +242,142 @@ export default function AdminPage() {
               </div>
             ))
           )}
+        </div>
+      )}
+
+      {activeTab === "reseller-import" && (
+        <div className="space-y-4">
+          <a href="/admin/reseller-import" className="btn-primary inline-block">
+            Open Reseller Import
+          </a>
+        </div>
+      )}
+
+      {activeTab === "reseller-products" && (
+        <div className="space-y-4">
+          <a href="/admin/reseller-products" className="btn-primary inline-block">
+            Open Reseller Products
+          </a>
+        </div>
+      )}
+
+      {activeTab === "reseller-settings" && (
+        <div className="space-y-4">
+          <a href="/admin/reseller-settings" className="btn-primary inline-block">
+            Open Reseller Settings
+          </a>
+        </div>
+      )}
+
+      {activeTab === "orders" && (
+        <div className="space-y-4">
+          {orders.length === 0 ? (
+            <p className="text-center text-gray-500 py-12">No orders yet</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="text-left text-sm text-gray-500 border-b border-gray-200">
+                    <th className="pb-3">Order</th>
+                    <th className="pb-3">Customer</th>
+                    <th className="pb-3">Total</th>
+                    <th className="pb-3">Status</th>
+                    <th className="pb-3">Date</th>
+                    <th className="pb-3">Reseller Items</th>
+                    <th className="pb-3">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {orders.map((order) => (
+                    <tr key={order.id} className="hover:bg-gray-50">
+                      <td className="py-4">
+                        <p className="text-sm font-medium text-gray-900">#{order.id.slice(-8).toUpperCase()}</p>
+                      </td>
+                      <td className="py-4">
+                        <p className="text-sm text-gray-900">{order.shippingName}</p>
+                        <p className="text-xs text-gray-500">{order.user?.email}</p>
+                      </td>
+                      <td className="py-4">
+                        <p className="text-sm font-bold text-primary">Rs. {order.totalAmount}</p>
+                      </td>
+                      <td className="py-4">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          order.status === "PENDING" ? "bg-yellow-100 text-yellow-800" :
+                          order.status === "CONFIRMED" ? "bg-blue-100 text-blue-800" :
+                          order.status === "PROCESSING" ? "bg-indigo-100 text-indigo-800" :
+                          order.status === "SHIPPED" ? "bg-purple-100 text-purple-800" :
+                          order.status === "DELIVERED" ? "bg-green-100 text-green-800" :
+                          order.status === "CANCELLED" ? "bg-red-100 text-red-800" :
+                          order.status === "FORWARDED_TO_SUPPLIER" ? "bg-blue-100 text-blue-800" :
+                          "bg-gray-100 text-gray-800"
+                        }`}>
+                          {order.status === "FORWARDED_TO_SUPPLIER" ? "Forwarded" : order.status}
+                        </span>
+                      </td>
+                      <td className="py-4 text-sm text-gray-500">
+                        {new Date(order.createdAt).toLocaleDateString("en-LK")}
+                      </td>
+                      <td className="py-4">
+                        {order.items.filter((i) => i.product.resellerSource).length > 0 ? (
+                          <div className="space-y-1">
+                            {order.items
+                              .filter((i) => i.product.resellerSource)
+                              .map((item) => (
+                                <div key={item.product.nameSi} className="text-xs text-blue-600">
+                                  {item.product.nameSi} ({item.product.resellerSource?.sourceDomain})
+                                </div>
+                              ))}
+                          </div>
+                        ) : (
+                          <span className="text-xs text-gray-400">—</span>
+                        )}
+                      </td>
+                      <td className="py-4">
+                        <div className="flex gap-1">
+                          <a
+                            href={`/admin/orders/${order.id}`}
+                            className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                          >
+                            View
+                          </a>
+                          {order.items.some((i) => i.product.resellerSource) && order.status !== "FORWARDED_TO_SUPPLIER" && (
+                            <button
+                              onClick={async () => {
+                                const res = await fetch(`/api/admin/orders/${order.id}`, {
+                                  method: "PATCH",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({ action: "forward_to_supplier" }),
+                                });
+                                if (res.ok) {
+                                  alert("Order marked as forwarded to supplier");
+                                  fetchData();
+                                }
+                              }}
+                              className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200"
+                            >
+                              Forward
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === "add-product" && (
+        <div className="text-center py-12">
+          <a
+            href="/admin/products/new"
+            className="btn-primary inline-block"
+          >
+            Create New Product
+          </a>
+          <p className="text-sm text-gray-500 mt-4">Manually add a product to the catalog (no source URL required)</p>
         </div>
       )}
     </div>

@@ -116,7 +116,7 @@ export async function GET(req: NextRequest) {
           some: { product: { producerId: producer.id } },
         };
       }
-    } else {
+    } else if (role !== "ADMIN") {
       where.userId = userId;
     }
 
@@ -126,7 +126,12 @@ export async function GET(req: NextRequest) {
         items: {
           include: {
             product: {
-              include: { producer: { include: { user: { select: { name: true } } } } },
+              include: { 
+                producer: { include: { user: { select: { name: true } } } },
+                resellerSource: {
+                  select: { sourceUrl: true, sourceDomain: true, sourcePrice: true }
+                }
+              },
             },
           },
         },
