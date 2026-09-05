@@ -116,7 +116,7 @@ export default function OrdersPage() {
                       📦
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-medium">{item.product.nameSi}</p>
+                      <p className="text-sm font-medium">{item.product.name}</p>
                       <p className="text-xs text-gray-500">
                         Rs. {item.price} × {item.quantity}
                       </p>
@@ -133,7 +133,7 @@ export default function OrdersPage() {
                     .map((item) => {
                       const source = item.product.resellerSource!;
                       const waNumber = source.supplierWhatsAppNumber?.replace(/\D/g, "") || "";
-                      const message = `New Fortune Market Order\n\nProduct: ${item.product.nameSi}\nSource: ${source.sourceUrl}\nQuantity: ${item.quantity}\nSelling Price: Rs. ${item.price}\nSource Price: Rs. ${source.sourcePrice}\nCustomer: ${order.shippingName}\nPhone: ${order.shippingPhone}\nAddress: ${order.shippingAddress}, ${order.shippingCity}\n\nPlease process this order.`;
+                      const message = `New Fortune Market Order\n\nProduct: ${item.product.name}\nSource: ${source.sourceUrl}\nQuantity: ${item.quantity}\nSelling Price: Rs. ${item.price}\nSource Price: Rs. ${source.sourcePrice}\nCustomer: ${order.shippingName}\nPhone: ${order.shippingPhone}\nAddress: ${order.shippingAddress}, ${order.shippingCity}\n\nPlease process this order.`;
                       const waLink = waNumber ? `https://wa.me/${waNumber}?text=${encodeURIComponent(message)}` : null;
 
                       return (

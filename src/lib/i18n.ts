@@ -6,7 +6,9 @@ export type Locale = "si" | "en";
 const dictionaries: Record<Locale, typeof si> = { si, en };
 
 export function getDictionary(locale: Locale) {
-  return dictionaries[locale] ?? dictionaries.si;
+  return dictionaries[locale] ?? dictionaries.en;
 }
+
+export const DEFAULT_LOCALE: Locale = "en";
 
 export type Dictionary = ReturnType<typeof getDictionary>;

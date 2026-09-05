@@ -12,7 +12,7 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
     const product = await prisma.product.findUnique({ where: { id: params.id } });
-    return { title: product ? `${product.nameSi} | Fortune Market` : "Product" };
+    return { title: product ? `${product.name} | Fortune Market` : "Product" };
   } catch {
     return { title: "Product" };
   }
@@ -35,7 +35,7 @@ export default async function ProductPage({ params }: Props) {
 
   if (!product) notFound();
 
-  let relatedProducts: { id: string; nameSi: string; price: number; rating: number; images: string; categoryId: string }[] = [];
+  let relatedProducts: { id: string; name: string; price: number; rating: number; images: string; categoryId: string }[] = [];
   try {
     relatedProducts = await prisma.product.findMany({
       where: {
@@ -56,10 +56,10 @@ export default async function ProductPage({ params }: Props) {
         <Link href="/" className="hover:text-primary">Home</Link>
         <span>/</span>
         <Link href={`/category/${product.category.slug}`} className="hover:text-primary">
-          {product.category.nameSi}
+          {product.category.name}
         </Link>
         <span>/</span>
-        <span className="text-gray-900">{product.nameSi}</span>
+        <span className="text-gray-900">{product.name}</span>
       </div>
 
       <ProductDetail product={JSON.parse(JSON.stringify(product))} />
@@ -76,7 +76,7 @@ export default async function ProductPage({ params }: Props) {
                   📦
                 </div>
                 <div className="p-3">
-                  <h3 className="font-medium text-sm text-gray-900 line-clamp-2">{rp.nameSi}</h3>
+                  <h3 className="font-medium text-sm text-gray-900 line-clamp-2">{rp.name}</h3>
                   <span className="font-bold text-primary text-sm">Rs. {rp.price}</span>
                 </div>
               </Link>

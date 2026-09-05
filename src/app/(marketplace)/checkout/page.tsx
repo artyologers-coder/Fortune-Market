@@ -9,6 +9,7 @@ interface CartItem {
   quantity: number;
   product: {
     id: string;
+    name: string;
     nameSi: string;
     price: number;
   };
@@ -203,7 +204,7 @@ export default function CheckoutPage() {
               {cart.map((item) => (
                 <div key={item.productId} className="flex justify-between text-sm">
                   <span className="text-gray-600">
-                    {item.product.nameSi} × {item.quantity}
+                    {item.product.name} × {item.quantity}
                   </span>
                   <span className="font-medium">Rs. {item.product.price * item.quantity}</span>
                 </div>

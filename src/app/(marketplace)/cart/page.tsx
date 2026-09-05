@@ -13,6 +13,7 @@ interface CartItem {
     nameSi: string;
     price: number;
     stock: number;
+    unit: string;
     unitSi: string;
   };
 }
@@ -80,8 +81,8 @@ export default function CartPage() {
                 📦
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="font-medium text-gray-900 text-sm">{item.product.nameSi}</h3>
-                <p className="text-primary font-bold">Rs. {item.product.price} / {item.product.unitSi}</p>
+                <h3 className="font-medium text-gray-900 text-sm">{item.product.name}</h3>
+                <p className="text-primary font-bold">Rs. {item.product.price} / {item.product.unit}</p>
                 <div className="flex items-center justify-between mt-2">
                   <div className="flex items-center border border-gray-300 rounded-lg">
                     <button

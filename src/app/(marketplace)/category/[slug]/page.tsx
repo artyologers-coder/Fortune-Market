@@ -15,7 +15,7 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
     const category = await prisma.category.findUnique({ where: { slug: params.slug } });
-    return { title: category ? `${category.nameSi} | Fortune Market` : "Category" };
+    return { title: category ? `${category.name} | Fortune Market` : "Category" };
   } catch {
     return { title: "Category" };
   }
@@ -53,11 +53,11 @@ export default async function CategoryPage({ params }: Props) {
         <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
           <Link href="/" className="hover:text-primary">Home</Link>
           <span>/</span>
-          <span className="text-gray-900">{category.nameSi}</span>
+          <span className="text-gray-900">{category.name}</span>
         </div>
-        <h1 className="text-3xl font-bold text-gray-900">{category.nameSi}</h1>
-        {category.descriptionSi && (
-          <p className="text-gray-500 mt-2">{category.descriptionSi}</p>
+        <h1 className="text-3xl font-bold text-gray-900">{category.name}</h1>
+        {category.description && (
+          <p className="text-gray-500 mt-2">{category.description}</p>
         )}
       </div>
 
@@ -77,7 +77,7 @@ export default async function CategoryPage({ params }: Props) {
               </div>
               <div className="p-4">
                 <h3 className="font-medium text-gray-900 text-sm mb-1 line-clamp-2">
-                  {product.nameSi}
+                  {product.name}
                 </h3>
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-primary">Rs. {product.price}</span>

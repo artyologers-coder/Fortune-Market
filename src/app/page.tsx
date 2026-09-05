@@ -3,7 +3,7 @@ import { getDictionary } from "@/lib/i18n";
 import Link from "next/link";
 
 export default function HomePage() {
-  const dict = getDictionary("si");
+  const dict = getDictionary("en");
 
   return (
     <div>
@@ -137,9 +137,9 @@ async function FeaturedProducts() {
           </div>
           <div className="p-4">
             <h3 className="font-medium text-gray-900 text-sm mb-1 line-clamp-2">
-              {product.nameSi}
+              {product.name}
             </h3>
-            <p className="text-xs text-gray-500 mb-2">{product.category.nameSi}</p>
+            <p className="text-xs text-gray-500 mb-2">{product.category.name}</p>
             <div className="flex items-center justify-between">
               <span className="font-bold text-primary">Rs. {product.price}</span>
               <div className="flex items-center gap-1 text-xs">

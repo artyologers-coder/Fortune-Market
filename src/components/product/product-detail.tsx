@@ -95,14 +95,14 @@ export function ProductDetail({ product }: ProductDetailProps) {
 
       <div>
         <div className="flex items-center gap-2 mb-2">
-          <span className="text-sm text-gray-500">{product.category.nameSi}</span>
+          <span className="text-sm text-gray-500">{product.category.name}</span>
           {product.producer.verificationStatus === "APPROVED" && (
             <span className="badge-verified">✓ Verified Producer</span>
           )}
         </div>
 
         <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
-          {product.nameSi}
+          {product.name}
         </h1>
 
         <div className="flex items-center gap-4 mb-4">
@@ -128,12 +128,12 @@ export function ProductDetail({ product }: ProductDetailProps) {
               </span>
             </>
           )}
-          <span className="text-sm text-gray-500">/ {product.unitSi}</span>
+          <span className="text-sm text-gray-500">/ {product.unit}</span>
         </div>
 
         <div className="mb-6">
           <h3 className="font-semibold text-gray-900 mb-2">Description</h3>
-          <p className="text-gray-600 leading-relaxed">{product.descriptionSi}</p>
+          <p className="text-gray-600 leading-relaxed">{product.description}</p>
         </div>
 
         <div className="mb-6">
@@ -204,7 +204,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
               {product.producer.businessName.charAt(0)}
             </div>
             <div>
-              <p className="font-medium text-gray-900">{product.producer.businessNameSi}</p>
+              <p className="font-medium text-gray-900">{product.producer.businessName}</p>
               <p className="text-sm text-gray-500">{product.producer.location}</p>
             </div>
           </div>
