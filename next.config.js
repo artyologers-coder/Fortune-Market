@@ -9,6 +9,7 @@ const nextConfig = {
     ],
   },
   experimental: {
+    serverComponentsExternalPackages: ["@sparticuz/chromium"],
     outputFileTracingIncludes: {
       "/api/admin/reseller/preview": ["./node_modules/@sparticuz/chromium/**"],
       "/api/admin/reseller/products": ["./node_modules/@sparticuz/chromium/**"],
