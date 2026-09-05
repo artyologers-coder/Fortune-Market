@@ -4,6 +4,7 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Logo } from "@/components/ui/logo";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -37,6 +38,9 @@ export default function LoginPage() {
     <div className="min-h-[80vh] flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
+          <Link href="/" className="inline-block">
+            <Logo className="h-16 w-auto mx-auto mb-4" />
+          </Link>
           <h1 className="text-3xl font-bold text-gray-900">Login</h1>
           <p className="text-gray-500 mt-2">Sign in to your Fortune Market account</p>
         </div>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Logo } from "@/components/ui/logo";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -73,6 +74,9 @@ export default function SignupPage() {
     <div className="min-h-[80vh] flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
+          <Link href="/" className="inline-block">
+            <Logo className="h-16 w-auto mx-auto mb-4" />
+          </Link>
           <h1 className="text-3xl font-bold text-gray-900">Sign Up</h1>
           <p className="text-gray-500 mt-2">Create your Fortune Market account</p>
         </div>

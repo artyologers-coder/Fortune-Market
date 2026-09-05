@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { getDictionary } from "@/lib/i18n";
 import Link from "next/link";
+import { Logo } from "@/components/ui/logo";
 
 export default function HomePage() {
   const dict = getDictionary("en");
@@ -9,9 +10,7 @@ export default function HomePage() {
     <div>
       <section className="bg-gradient-to-br from-primary-500 to-primary-700 text-white">
         <div className="page-container text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-4">
-            {dict.hero.title}
-          </h1>
+          <Logo className="h-24 w-auto mx-auto mb-6 drop-shadow-lg" />
           <p className="text-lg md:text-xl text-primary-100 mb-8 max-w-2xl mx-auto">
             {dict.hero.subtitle}
           </p>

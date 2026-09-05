@@ -1,10 +1,12 @@
+import { Logo } from "@/components/ui/logo";
+
 export function Footer() {
   return (
     <footer className="bg-gray-900 text-gray-300 mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
-            <h3 className="text-white font-bold text-lg mb-3">Fortune Market</h3>
+            <Logo className="h-12 w-auto mb-3" />
             <p className="text-sm text-gray-400">
               Fortune Market connects Sri Lankan home-based producers and small
               businesses with buyers.

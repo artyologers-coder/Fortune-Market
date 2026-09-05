@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import Link from "next/link";
+import { Logo } from "@/components/ui/logo";
 
 function OtpForm() {
   const router = useRouter();
@@ -54,6 +56,9 @@ function OtpForm() {
   return (
     <div className="w-full max-w-md">
       <div className="text-center mb-8">
+        <Link href="/" className="inline-block">
+          <Logo className="h-16 w-auto mx-auto mb-4" />
+        </Link>
         <h1 className="text-3xl font-bold text-gray-900">Phone Verification</h1>
         <p className="text-gray-500 mt-2">
           An OTP code has been sent to {phone}
