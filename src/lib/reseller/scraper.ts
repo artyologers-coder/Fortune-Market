@@ -2,7 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import * as cheerio from "cheerio";
 import https from "https";
 import http from "http";
-import { isBrowserScrapingAvailable, getBrowserUnavailableReason } from "@/lib/url-scraper-browser";
+import { isBrowserScrapingAvailable, getBrowserUnavailableReason, getSparticuzLaunchConfig } from "@/lib/url-scraper-browser";
 import { ResellerScrapeResult, ScrapeOutcome, ScrapedProductWithOutcome } from "./types";
 
 const prisma = new PrismaClient();
@@ -384,7 +384,8 @@ async function scrapeWithBrowser(url: string, existingProfile?: { selectorConfig
   let browser: import("playwright").Browser | null = null;
   try {
     const { chromium } = await import("playwright");
-    browser = await chromium.launch({ headless: true });
+    const launchConfig = await getSparticuzLaunchConfig();
+    browser = await chromium.launch({ ...launchConfig, headless: true });
     const context = await browser.newContext({
       userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
       viewport: { width: 1920, height: 1080 },

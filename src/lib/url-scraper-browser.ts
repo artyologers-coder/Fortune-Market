@@ -1,4 +1,5 @@
 import { ScrapedProduct } from "./url-scraper";
+import Chromium from "@sparticuz/chromium";
 
 interface BrowserExtractedData {
   pageData: PageData;
@@ -280,6 +281,19 @@ function extractSiteName(data: PageData, hostname: string): string {
 let browserProbeResult: boolean | null = null;
 let browserProbeError: string | null = null;
 
+let sparticuzConfigured = false;
+
+async function getSparticuzLaunchConfig(): Promise<{ executablePath: string; args: string[] }> {
+  if (!sparticuzConfigured) {
+    Chromium.setGraphicsMode = false;
+    sparticuzConfigured = true;
+  }
+  const executablePath = await Chromium.executablePath();
+  return { executablePath, args: Chromium.args };
+}
+
+export { getSparticuzLaunchConfig };
+
 export function getBrowserUnavailableReason(): string | null {
   return browserProbeError;
 }
@@ -292,7 +306,8 @@ export async function isBrowserScrapingAvailable(): Promise<boolean> {
   if (browserProbeResult !== null) return browserProbeResult;
   try {
     const { chromium } = await import("playwright");
-    const browser = await chromium.launch({ headless: true, timeout: 15000 });
+    const launchConfig = await getSparticuzLaunchConfig();
+    const browser = await chromium.launch({ ...launchConfig, headless: true, timeout: 15000 });
     await browser.close();
     browserProbeResult = true;
     browserProbeError = null;
@@ -305,7 +320,8 @@ export async function isBrowserScrapingAvailable(): Promise<boolean> {
 
 export async function scrapeWithBrowser(url: string): Promise<ScrapedProduct> {
   const { chromium } = await import("playwright");
-  const browser = await chromium.launch({ headless: true });
+  const launchConfig = await getSparticuzLaunchConfig();
+  const browser = await chromium.launch({ ...launchConfig, headless: true });
   const context = await browser.newContext({
     userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
     viewport: { width: 1920, height: 1080 },
