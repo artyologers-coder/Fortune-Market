@@ -29,6 +29,10 @@ yarn-error.log*
 # database
 *.db
 
+# designer source files
+*.af
+*.af~lock~
+
 # vercel
 .vercel
 
