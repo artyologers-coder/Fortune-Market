@@ -278,6 +278,11 @@ function extractSiteName(data: PageData, hostname: string): string {
 }
 
 let browserProbeResult: boolean | null = null;
+let browserProbeError: string | null = null;
+
+export function getBrowserUnavailableReason(): string | null {
+  return browserProbeError;
+}
 
 export async function isBrowserScrapingAvailable(): Promise<boolean> {
   const disabled =
@@ -290,8 +295,10 @@ export async function isBrowserScrapingAvailable(): Promise<boolean> {
     const browser = await chromium.launch({ headless: true, timeout: 15000 });
     await browser.close();
     browserProbeResult = true;
-  } catch {
+    browserProbeError = null;
+  } catch (error) {
     browserProbeResult = false;
+    browserProbeError = error instanceof Error ? error.message : "Unknown launch error";
   }
   return browserProbeResult;
 }

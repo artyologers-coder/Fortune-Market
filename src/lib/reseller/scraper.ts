@@ -2,7 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import * as cheerio from "cheerio";
 import https from "https";
 import http from "http";
-import { isBrowserScrapingAvailable } from "@/lib/url-scraper-browser";
+import { isBrowserScrapingAvailable, getBrowserUnavailableReason } from "@/lib/url-scraper-browser";
 import { ResellerScrapeResult, ScrapeOutcome, ScrapedProductWithOutcome } from "./types";
 
 const prisma = new PrismaClient();
@@ -508,7 +508,7 @@ export async function scrapeProductUrl(url: string): Promise<ScrapedProductWithO
     try {
       const ok = await browserAvailable();
       if (!ok) {
-        browserError = "Playwright browser not available in this environment";
+        browserError = getBrowserUnavailableReason() || "Playwright browser not available in this environment";
         return;
       }
       scraped = await scrapeWithBrowser(localeUrl, p ? { selectorConfig: p.selectorConfig, strategy: p.strategy, requiresJsRender: p.requiresJsRender } : options);
