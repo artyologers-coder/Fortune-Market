@@ -5,7 +5,7 @@ import { Footer } from "@/components/layout/footer";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Fortune Market | ෆෝචුන් වෙළඳපොළ",
+  title: "Fortune Market",
   description: "Sri Lankan online marketplace connecting home-based producers with buyers",
 };
 
