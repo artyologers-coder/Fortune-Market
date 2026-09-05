@@ -143,7 +143,9 @@ export async function POST(req: NextRequest) {
 
     if (!finalName || finalName.length < 3) {
       try {
-        const { scrapeWithBrowser } = await import("@/lib/url-scraper-browser");
+        const { scrapeWithBrowser, isBrowserScrapingAvailable } = await import("@/lib/url-scraper-browser");
+        const available = await isBrowserScrapingAvailable();
+        if (!available) throw new Error("Browser scraping unavailable");
         const browserResult = await scrapeWithBrowser(url);
         finalName = finalName || browserResult.name;
         finalDesc = finalDesc || browserResult.description;

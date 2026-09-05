@@ -277,6 +277,20 @@ function extractSiteName(data: PageData, hostname: string): string {
   return hostname.split(".")[0] || hostname;
 }
 
+export async function isBrowserScrapingAvailable(): Promise<boolean> {
+  const disabled =
+    process.env.DISABLE_BROWSER_SCRAPING === "1" ||
+    process.env.DISABLE_BROWSER_SCRAPING === "true";
+  if (disabled) return false;
+  try {
+    const { chromium } = await import("playwright");
+    const executablePath = chromium.executablePath();
+    return executablePath ? require("fs").existsSync(executablePath) : false;
+  } catch {
+    return false;
+  }
+}
+
 export async function scrapeWithBrowser(url: string): Promise<ScrapedProduct> {
   const { chromium } = await import("playwright");
   const browser = await chromium.launch({ headless: true });

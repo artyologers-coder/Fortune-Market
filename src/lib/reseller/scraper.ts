@@ -2,12 +2,17 @@ import { PrismaClient } from "@prisma/client";
 import * as cheerio from "cheerio";
 import https from "https";
 import http from "http";
+import { isBrowserScrapingAvailable } from "@/lib/url-scraper-browser";
 import { ResellerScrapeResult, ScrapeOutcome, ScrapedProductWithOutcome } from "./types";
 
 const prisma = new PrismaClient();
 
 const DOMAIN_RATE_LIMIT_MS = parseInt(process.env.RESYNC_DOMAIN_DELAY_MS || "5000", 10);
 const lastRequestTime = new Map<string, number>();
+
+function browserAvailable(): Promise<boolean> {
+  return isBrowserScrapingAvailable();
+}
 
 function getDomain(url: string): string {
   try {
@@ -497,20 +502,34 @@ export async function scrapeProductUrl(url: string): Promise<ScrapedProductWithO
 
   let scraped: ResellerScrapeResult | null = null;
   let usedBrowser = false;
+  let browserError: string | null = null;
+
+  async function tryBrowser(localeUrl: string, p: typeof profile, options?: { selectorConfig: string | null; strategy: string; requiresJsRender?: boolean }): Promise<void> {
+    try {
+      const ok = await browserAvailable();
+      if (!ok) {
+        browserError = "Playwright browser not available in this environment";
+        return;
+      }
+      scraped = await scrapeWithBrowser(localeUrl, p ? { selectorConfig: p.selectorConfig, strategy: p.strategy, requiresJsRender: p.requiresJsRender } : options);
+      usedBrowser = true;
+    } catch (error) {
+      browserError = error instanceof Error ? error.message : "Browser scraping failed";
+    }
+  }
 
   try {
     if (profile?.requiresJsRender) {
-      scraped = await scrapeWithBrowser(url, profile ? { selectorConfig: profile.selectorConfig, strategy: profile.strategy, requiresJsRender: profile.requiresJsRender } : undefined);
-      usedBrowser = true;
+      await tryBrowser(url, profile);
+      if (!scraped && !usedBrowser) {
+        scraped = await scrapeStatic(url, { selectorConfig: profile.selectorConfig, strategy: profile.strategy });
+      }
     } else {
       scraped = await scrapeStatic(url, profile ? { selectorConfig: profile.selectorConfig, strategy: profile.strategy } : undefined);
     }
 
-    if (!scraped || scraped.confidence === "low") {
-      if (!profile?.requiresJsRender) {
-        scraped = await scrapeWithBrowser(url, profile ? { selectorConfig: profile.selectorConfig, strategy: profile.strategy, requiresJsRender: profile.requiresJsRender } : undefined);
-        usedBrowser = true;
-      }
+    if ((!scraped || scraped.confidence === "low") && !profile?.requiresJsRender) {
+      await tryBrowser(url, profile);
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
@@ -518,6 +537,14 @@ export async function scrapeProductUrl(url: string): Promise<ScrapedProductWithO
   }
 
   if (!scraped) {
+    if (browserError) {
+      return {
+        outcome: "failed",
+        data: null,
+        missingFields: ["name", "price"],
+        error: `Scraping failed: ${browserError}`,
+      };
+    }
     return { outcome: "failed", data: null, missingFields: ["name", "price"], error: "All extraction methods failed" };
   }
 
