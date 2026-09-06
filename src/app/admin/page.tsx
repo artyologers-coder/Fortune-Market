@@ -28,6 +28,10 @@ interface Product {
   price: number;
   flagged: boolean;
   active: boolean;
+  sourceSite: string | null;
+  sourceUrl: string | null;
+  createdAt: string;
+  producer: { user: { name: string | null } } | null;
 }
 
 interface Order {
@@ -51,9 +55,10 @@ export default function AdminPage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [pendingProducers, setPendingProducers] = useState<Producer[]>([]);
   const [flaggedProducts, setFlaggedProducts] = useState<Product[]>([]);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"overview" | "verification" | "moderation" | "reseller-import" | "reseller-products" | "reseller-settings" | "orders" | "add-product">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "verification" | "moderation" | "products" | "reseller-import" | "reseller-products" | "reseller-settings" | "orders" | "add-product">("overview");
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -72,10 +77,11 @@ export default function AdminPage() {
 
   async function fetchData() {
     try {
-      const [statsRes, producersRes, productsRes, ordersRes] = await Promise.all([
+      const [statsRes, producersRes, productsRes, allProductsRes, ordersRes] = await Promise.all([
         fetch("/api/admin"),
         fetch("/api/admin/producers"),
         fetch("/api/admin/products"),
+        fetch("/api/admin/products?all=1"),
         fetch("/api/orders"),
       ]);
 
@@ -92,6 +98,11 @@ export default function AdminPage() {
       if (productsRes.ok) {
         const data = await productsRes.json();
         setFlaggedProducts(data.products || []);
+      }
+
+      if (allProductsRes.ok) {
+        const data = await allProductsRes.json();
+        setAllProducts(data.products || []);
       }
 
       if (ordersRes.ok) {
@@ -130,6 +141,35 @@ export default function AdminPage() {
     );
   }
 
+  async function handleRemoveProduct(productId: string) {
+    if (!confirm("Remove this product? It will be hidden from the marketplace.")) return;
+    const res = await fetch(`/api/admin/products/${productId}`, {
+      method: "DELETE",
+    });
+    if (res.ok) {
+      setAllProducts((prev) =>
+        prev.map((p) => (p.id === productId ? { ...p, active: false } : p))
+      );
+    } else {
+      alert("Failed to remove product");
+    }
+  }
+
+  async function handleRestoreProduct(productId: string) {
+    const res = await fetch(`/api/admin/products/${productId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "restore" }),
+    });
+    if (res.ok) {
+      setAllProducts((prev) =>
+        prev.map((p) => (p.id === productId ? { ...p, active: true } : p))
+      );
+    } else {
+      alert("Failed to restore product");
+    }
+  }
+
   if (loading) {
     return <div className="page-container text-center text-gray-500">Loading...</div>;
   }
@@ -139,7 +179,7 @@ export default function AdminPage() {
       <h1 className="text-3xl font-bold text-gray-900 mb-8">Admin Panel</h1>
 
       <div className="flex gap-2 mb-6 border-b border-gray-200">
-        {(["overview", "verification", "moderation", "orders", "reseller-import", "reseller-products", "reseller-settings", "add-product"] as const).map((tab) => (
+        {(["overview", "verification", "moderation", "products", "orders", "reseller-import", "reseller-products", "reseller-settings", "add-product"] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -149,7 +189,7 @@ export default function AdminPage() {
                 : "border-transparent text-gray-500 hover:text-gray-700"
             }`}
           >
-            {tab === "overview" ? "Overview" : tab === "verification" ? "Verification" : tab === "moderation" ? "Moderation" : tab === "orders" ? "Orders" : tab === "reseller-import" ? "Reseller Import" : tab === "reseller-products" ? "Reseller Products" : tab === "reseller-settings" ? "Reseller Settings" : "Add Product"}
+            {tab === "overview" ? "Overview" : tab === "verification" ? "Verification" : tab === "moderation" ? "Moderation" : tab === "products" ? "Products" : tab === "orders" ? "Orders" : tab === "reseller-import" ? "Reseller Import" : tab === "reseller-products" ? "Reseller Products" : tab === "reseller-settings" ? "Reseller Settings" : "Add Product"}
           </button>
         ))}
       </div>
@@ -241,6 +281,71 @@ export default function AdminPage() {
                 </div>
               </div>
             ))
+          )}
+        </div>
+      )}
+
+      {activeTab === "products" && (
+        <div className="overflow-x-auto">
+          {allProducts.length === 0 ? (
+            <p className="text-center text-gray-500 py-12">No products yet</p>
+          ) : (
+            <table className="w-full">
+              <thead>
+                <tr className="text-left text-sm text-gray-500 border-b border-gray-200">
+                  <th className="pb-3">Product</th>
+                  <th className="pb-3">Price</th>
+                  <th className="pb-3">Source</th>
+                  <th className="pb-3">Status</th>
+                  <th className="pb-3">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {allProducts.map((product) => (
+                  <tr key={product.id} className="hover:bg-gray-50">
+                    <td className="py-4">
+                      <p className="font-medium text-gray-900">{product.nameSi}</p>
+                      <p className="text-xs text-gray-500">{product.name}</p>
+                    </td>
+                    <td className="py-4">
+                      <p className="text-sm font-bold text-primary">Rs. {product.price}</p>
+                    </td>
+                    <td className="py-4">
+                      <p className="text-sm text-gray-900">{product.sourceSite || product.producer?.user?.name || "N/A"}</p>
+                      {product.sourceUrl && (
+                        <p className="text-xs text-gray-500 truncate max-w-xs">{product.sourceUrl}</p>
+                      )}
+                    </td>
+                    <td className="py-4">
+                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                        product.active ? (product.flagged ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700") : "bg-gray-100 text-gray-600"
+                      }`}>
+                        {product.active ? (product.flagged ? "Flagged" : "Active") : "Inactive"}
+                      </span>
+                    </td>
+                    <td className="py-4">
+                      <div className="flex gap-1">
+                        {product.active ? (
+                          <button
+                            onClick={() => handleRemoveProduct(product.id)}
+                            className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200"
+                          >
+                            Remove
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleRestoreProduct(product.id)}
+                            className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200"
+                          >
+                            Restore
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           )}
         </div>
       )}

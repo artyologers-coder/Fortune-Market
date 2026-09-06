@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/prisma";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
@@ -15,10 +15,15 @@ export async function GET() {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    const { searchParams } = new URL(req.url);
+    const all = searchParams.get("all") === "1";
+
     const products = await prisma.product.findMany({
-      where: {
-        OR: [{ flagged: true }, { active: false }],
-      },
+      where: all
+        ? undefined
+        : {
+            OR: [{ flagged: true }, { active: false }],
+          },
       include: {
         producer: { include: { user: { select: { name: true } } } },
       },

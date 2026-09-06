@@ -116,6 +116,24 @@ export default function ProducerDashboard() {
     }
   }
 
+  async function handleRemoveProduct(productId: string) {
+    if (!confirm("Remove this product? It will be hidden from the marketplace.")) return;
+    try {
+      const res = await fetch(`/api/producer/products?id=${productId}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setProducts((prev) =>
+          prev.map((p) => (p.id === productId ? { ...p, active: false } : p))
+        );
+      } else {
+        alert("Failed to remove product");
+      }
+    } catch {
+      alert("Failed to remove product");
+    }
+  }
+
   return (
     <div className="page-container">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
@@ -224,6 +242,15 @@ export default function ProducerDashboard() {
                       {product.active ? "Active" : "Inactive"}
                     </span>
                     <span className="text-xs text-gray-500">★ {product.rating.toFixed(1)}</span>
+                  </div>
+                  <div className="mt-3 pt-3 border-t border-gray-100">
+                    <button
+                      onClick={() => handleRemoveProduct(product.id)}
+                      disabled={!product.active}
+                      className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      Remove
+                    </button>
                   </div>
                 </div>
               ))}
