@@ -62,7 +62,7 @@ export default function ProducerDashboard() {
 
       Promise.all([
         fetch("/api/producer/profile").then((r) => r.json()).catch(() => ({ producer: null })),
-        fetch("/api/producer/products").then((r) => r.json()).catch(() => ({ products: [] })),
+        fetch("/api/producer/products/list").then((r) => r.json()).catch(() => ({ products: [] })),
         fetch("/api/orders").then((r) => r.json()).catch(() => ({ orders: [] })),
       ]).then(([profileData, productsData, ordersData]) => {
         setProducer(profileData.producer);
@@ -243,7 +243,13 @@ export default function ProducerDashboard() {
                     </span>
                     <span className="text-xs text-gray-500">★ {product.rating.toFixed(1)}</span>
                   </div>
-                  <div className="mt-3 pt-3 border-t border-gray-100">
+                  <div className="mt-3 pt-3 border-t border-gray-100 flex gap-2">
+                    <Link
+                      href={`/producer/dashboard/listings?id=${product.id}`}
+                      className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+                    >
+                      Edit
+                    </Link>
                     <button
                       onClick={() => handleRemoveProduct(product.id)}
                       disabled={!product.active}

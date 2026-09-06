@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 type Tab = "manual" | "import";
 
@@ -16,12 +16,38 @@ interface ScrapedData {
   siteName: string;
 }
 
+const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+
+const categories = [
+  { id: "cat-foods", name: "Foods", nameSi: "ආහාර", slug: "foods" },
+  { id: "cat-crafts", name: "Crafts", nameSi: "වෙළඳ භාණ්ඩ", slug: "crafts" },
+  { id: "cat-naturals", name: "Naturals", nameSi: "ස්වාභාවික", slug: "naturals" },
+  { id: "cat-fashion", name: "Fashion", nameSi: "විලාසිතා", slug: "fashion" },
+];
+
 export default function ProducerListings() {
+  return (
+    <Suspense
+      fallback={<div className="page-container text-center text-gray-500">Loading...</div>}
+    >
+      <ProducerListingsContent />
+    </Suspense>
+  );
+}
+
+function ProducerListingsContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const editId = searchParams.get("id");
+  const editing = Boolean(editId);
+
   const [tab, setTab] = useState<Tab>("manual");
   const [loading, setLoading] = useState(false);
+  const [productLoading, setProductLoading] = useState(editing);
   const [success, setSuccess] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
 
   const [importUrl, setImportUrl] = useState("");
   const [importing, setImporting] = useState(false);
@@ -42,22 +68,93 @@ export default function ProducerListings() {
     unit: "piece",
     unitSi: "කැබැල්ල",
     stock: "",
+    active: true,
+    images: [] as string[],
   });
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/auth/login");
+      return;
+    }
+    if (status === "authenticated" && editId) {
+      fetch(`/api/producer/products?id=${editId}`)
+        .then((r) => r.json())
+        .then((data) => {
+          const p = data.product;
+          if (p) {
+            let images: string[] = [];
+            try {
+              images = Array.isArray(JSON.parse(p.images || "[]")) ? JSON.parse(p.images || "[]") : [];
+            } catch {
+              images = [];
+            }
+            setForm({
+              name: p.name || "",
+              nameSi: p.nameSi || "",
+              description: p.description || "",
+              descriptionSi: p.descriptionSi || "",
+              categoryId: p.categoryId || "",
+              price: p.price != null ? String(p.price) : "",
+              originalPrice: p.originalPrice != null ? String(p.originalPrice) : "",
+              unit: p.unit || "piece",
+              unitSi: p.unitSi || "කැබැල්ල",
+              stock: p.stock != null ? String(p.stock) : "",
+              active: p.active !== false,
+              images,
+            });
+            setTab("manual");
+          } else {
+            alert(data.error || "Product not found");
+            router.push("/producer/dashboard");
+          }
+        })
+        .catch(() => {
+          alert("Failed to load product");
+          router.push("/producer/dashboard");
+        })
+        .finally(() => setProductLoading(false));
+    }
+  }, [status, editId, router]);
 
   if (status === "unauthenticated") {
     router.push("/auth/login");
     return null;
   }
 
-  const categories = [
-    { id: "cat-foods", name: "Foods", nameSi: "ආහාර", slug: "foods" },
-    { id: "cat-crafts", name: "Crafts", nameSi: "වෙළඳ භාණ්ඩ", slug: "crafts" },
-    { id: "cat-naturals", name: "Naturals", nameSi: "ස්වාභාවික", slug: "naturals" },
-    { id: "cat-fashion", name: "Fashion", nameSi: "විලාසිතා", slug: "fashion" },
-  ];
-
-  function update(field: string, value: string) {
+  function update(field: string, value: string | boolean) {
     setForm((prev) => ({ ...prev, [field]: value }));
+  }
+
+  async function handleUpload(file: File) {
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      setUploadError("Only JPG, PNG, WebP, or GIF images are allowed");
+      return;
+    }
+    if (file.size > 3 * 1024 * 1024) {
+      setUploadError("Image must be under 3 MB");
+      return;
+    }
+    setUploading(true);
+    setUploadError("");
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/producer/upload", { method: "POST", body: fd });
+      const data = await res.json();
+      if (res.ok) {
+        setForm((prev) => ({ ...prev, images: [...prev.images, data.url] }));
+      } else {
+        setUploadError(data.error || "Upload failed");
+      }
+    } catch {
+      setUploadError("Upload failed");
+    }
+    setUploading(false);
+  }
+
+  function handleRemoveImage(url: string) {
+    setForm((prev) => ({ ...prev, images: prev.images.filter((i) => i !== url) }));
   }
 
   async function handlePreview() {
@@ -127,22 +224,30 @@ export default function ProducerListings() {
     setLoading(true);
 
     try {
+      const payload = editing
+        ? { id: editId, ...form }
+        : { ...form };
       const res = await fetch("/api/producer/products", {
-        method: "POST",
+        method: editing ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
 
       if (res.ok) {
         setSuccess(true);
-        setForm({
-          name: "", nameSi: "", description: "", descriptionSi: "",
-          categoryId: "", price: "", originalPrice: "", unit: "piece",
-          unitSi: "කැබැල්ල", stock: "",
-        });
+        if (!editing) {
+          setForm({
+            name: "", nameSi: "", description: "", descriptionSi: "",
+            categoryId: "", price: "", originalPrice: "", unit: "piece",
+            unitSi: "කැබැල්ල", stock: "", active: true, images: [],
+          });
+        } else {
+          router.push("/producer/dashboard");
+          return;
+        }
       } else {
         const data = await res.json();
-        alert(data.error || "Failed to create product");
+        alert(data.error || (editing ? "Failed to update product" : "Failed to create product"));
       }
     } catch {
       alert("Something went wrong");
@@ -151,11 +256,17 @@ export default function ProducerListings() {
     setLoading(false);
   }
 
+  if (productLoading) {
+    return <div className="page-container text-center text-gray-500">Loading product...</div>;
+  }
+
   return (
     <div className="page-container max-w-3xl mx-auto">
-      <h1 className="text-3xl font-bold text-gray-900 mb-6">Add New Product</h1>
+      <h1 className="text-3xl font-bold text-gray-900 mb-6">
+        {editing ? "Edit Product" : "Add New Product"}
+      </h1>
 
-      {success && (
+      {success && !editing && (
         <div className="bg-green-50 text-green-700 p-4 rounded-lg mb-6">
           Product created successfully!{" "}
           <button onClick={() => setSuccess(false)} className="underline font-medium">
@@ -177,7 +288,8 @@ export default function ProducerListings() {
         </button>
         <button
           onClick={() => setTab("import")}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+          disabled={editing}
+          className={`px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
             tab === "import"
               ? "bg-emerald-600 text-white"
               : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -236,12 +348,61 @@ export default function ProducerListings() {
             </div>
           </div>
 
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Images</label>
+            <div className="flex flex-wrap gap-3">
+              {form.images.map((url) => (
+                <div key={url} className="relative w-24 h-24 rounded-lg overflow-hidden border border-gray-200">
+                  <img src={url} alt="Product preview" className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveImage(url)}
+                    className="absolute top-1 right-1 w-6 h-6 bg-red-600 text-white text-xs rounded-full hover:bg-red-700"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+              <label className="w-24 h-24 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-gray-400 text-gray-400 text-sm">
+                {uploading ? "..." : "+ Add"}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleUpload(file);
+                    e.target.value = "";
+                  }}
+                />
+              </label>
+            </div>
+            {uploadError && <p className="text-xs text-red-600 mt-1">{uploadError}</p>}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <input
+              id="active"
+              type="checkbox"
+              checked={form.active}
+              onChange={(e) => update("active", e.target.checked)}
+              className="w-4 h-4"
+            />
+            <label htmlFor="active" className="text-sm text-gray-700">
+              Listed on marketplace {editing && <span className="text-gray-400">(availability)</span>}
+            </label>
+          </div>
+
           <div className="flex justify-between pt-4">
-            <button type="button" onClick={() => router.push("/producer/dashboard")} className="btn-ghost">
+            <button
+              type="button"
+              onClick={() => router.push("/producer/dashboard")}
+              className="btn-ghost"
+            >
               ← Back to Dashboard
             </button>
             <button type="submit" disabled={loading} className="btn-primary">
-              {loading ? "Creating..." : "Create Product"}
+              {loading ? "Saving..." : editing ? "Save Changes" : "Create Product"}
             </button>
           </div>
         </form>
