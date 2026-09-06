@@ -49,6 +49,35 @@ interface Order {
   }>;
 }
 
+interface ProductFilters {
+  q: string;
+  status: string;
+  source: string;
+  producerId: string;
+  categoryId: string;
+  minRating: string;
+  sort: string;
+}
+
+interface Pagination {
+  page: number;
+  perPage: number;
+  total: number;
+  totalPages: number;
+}
+
+interface CategoryOption {
+  id: string;
+  name: string;
+  nameSi: string;
+}
+
+interface ProducerOption {
+  id: string;
+  businessName: string;
+  businessNameSi: string;
+}
+
 export default function AdminPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -56,6 +85,25 @@ export default function AdminPage() {
   const [pendingProducers, setPendingProducers] = useState<Producer[]>([]);
   const [flaggedProducts, setFlaggedProducts] = useState<Product[]>([]);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [allPage, setAllPage] = useState(1);
+  const [allPagination, setAllPagination] = useState<Pagination>({
+    page: 1,
+    perPage: 20,
+    total: 0,
+    totalPages: 1,
+  });
+  const [categories, setCategories] = useState<CategoryOption[]>([]);
+  const [adminProducers, setAdminProducers] = useState<ProducerOption[]>([]);
+  const [searchInput, setSearchInput] = useState("");
+  const [filters, setFilters] = useState<ProductFilters>({
+    q: "",
+    status: "all",
+    source: "all",
+    producerId: "all",
+    categoryId: "all",
+    minRating: "0",
+    sort: "newest",
+  });
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"overview" | "verification" | "moderation" | "products" | "reseller-import" | "reseller-products" | "reseller-settings" | "orders" | "add-product">("overview");
@@ -77,11 +125,10 @@ export default function AdminPage() {
 
   async function fetchData() {
     try {
-      const [statsRes, producersRes, productsRes, allProductsRes, ordersRes] = await Promise.all([
+      const [statsRes, producersRes, productsRes, ordersRes] = await Promise.all([
         fetch("/api/admin"),
         fetch("/api/admin/producers"),
         fetch("/api/admin/products"),
-        fetch("/api/admin/products?all=1"),
         fetch("/api/orders"),
       ]);
 
@@ -100,11 +147,6 @@ export default function AdminPage() {
         setFlaggedProducts(data.products || []);
       }
 
-      if (allProductsRes.ok) {
-        const data = await allProductsRes.json();
-        setAllProducts(data.products || []);
-      }
-
       if (ordersRes.ok) {
         const data = await ordersRes.json();
         setOrders(data.orders || []);
@@ -113,6 +155,49 @@ export default function AdminPage() {
       console.error("Failed to fetch admin data");
     }
     setLoading(false);
+  }
+
+  async function loadAllProducts(page: number) {
+    const params = new URLSearchParams({ all: "1", page: String(page) });
+    if (filters.q) params.set("q", filters.q);
+    if (filters.status !== "all") params.set("status", filters.status);
+    if (filters.source !== "all") params.set("source", filters.source);
+    if (filters.producerId !== "all") params.set("producerId", filters.producerId);
+    if (filters.categoryId !== "all") params.set("categoryId", filters.categoryId);
+    if (filters.minRating !== "0") params.set("minRating", filters.minRating);
+    if (filters.sort !== "newest") params.set("sort", filters.sort);
+    try {
+      const res = await fetch(`/api/admin/products?${params.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
+        setAllProducts(data.products || []);
+        if (data.pagination) setAllPagination(data.pagination);
+        if (data.categories?.length) setCategories(data.categories);
+        if (data.producers?.length) setAdminProducers(data.producers);
+      } else {
+        setAllProducts([]);
+      }
+    } catch {
+      console.error("Failed to fetch all products");
+    }
+  }
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilters((prev) => (prev.q === searchInput ? prev : { ...prev, q: searchInput }));
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      loadAllProducts(allPage);
+    }
+  }, [filters, allPage, status]);
+
+  function handleFilterChange(field: keyof ProductFilters, value: string) {
+    setFilters((prev) => ({ ...prev, [field]: value }));
+    setAllPage(1);
   }
 
   async function handleProducerAction(producerId: string, action: "approve" | "reject") {
@@ -147,9 +232,7 @@ export default function AdminPage() {
       method: "DELETE",
     });
     if (res.ok) {
-      setAllProducts((prev) =>
-        prev.map((p) => (p.id === productId ? { ...p, active: false } : p))
-      );
+      loadAllProducts(allPage);
     } else {
       alert("Failed to remove product");
     }
@@ -162,9 +245,7 @@ export default function AdminPage() {
       body: JSON.stringify({ action: "restore" }),
     });
     if (res.ok) {
-      setAllProducts((prev) =>
-        prev.map((p) => (p.id === productId ? { ...p, active: true } : p))
-      );
+      loadAllProducts(allPage);
     } else {
       alert("Failed to restore product");
     }
@@ -286,66 +367,161 @@ export default function AdminPage() {
       )}
 
       {activeTab === "products" && (
-        <div className="overflow-x-auto">
-          {allProducts.length === 0 ? (
-            <p className="text-center text-gray-500 py-12">No products yet</p>
-          ) : (
-            <table className="w-full">
-              <thead>
-                <tr className="text-left text-sm text-gray-500 border-b border-gray-200">
-                  <th className="pb-3">Product</th>
-                  <th className="pb-3">Price</th>
-                  <th className="pb-3">Source</th>
-                  <th className="pb-3">Status</th>
-                  <th className="pb-3">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {allProducts.map((product) => (
-                  <tr key={product.id} className="hover:bg-gray-50">
-                    <td className="py-4">
-                      <p className="font-medium text-gray-900">{product.nameSi}</p>
-                      <p className="text-xs text-gray-500">{product.name}</p>
-                    </td>
-                    <td className="py-4">
-                      <p className="text-sm font-bold text-primary">Rs. {product.price}</p>
-                    </td>
-                    <td className="py-4">
-                      <p className="text-sm text-gray-900">{product.sourceSite || product.producer?.user?.name || "N/A"}</p>
-                      {product.sourceUrl && (
-                        <p className="text-xs text-gray-500 truncate max-w-xs">{product.sourceUrl}</p>
-                      )}
-                    </td>
-                    <td className="py-4">
-                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                        product.active ? (product.flagged ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700") : "bg-gray-100 text-gray-600"
-                      }`}>
-                        {product.active ? (product.flagged ? "Flagged" : "Active") : "Inactive"}
-                      </span>
-                    </td>
-                    <td className="py-4">
-                      <div className="flex gap-1">
-                        {product.active ? (
-                          <button
-                            onClick={() => handleRemoveProduct(product.id)}
-                            className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200"
-                          >
-                            Remove
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => handleRestoreProduct(product.id)}
-                            className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200"
-                          >
-                            Restore
-                          </button>
-                        )}
-                      </div>
-                    </td>
+        <div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+            <input
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder="Search products (E / Sinhala)..."
+              className="input-field"
+            />
+            <select
+              value={filters.status}
+              onChange={(e) => handleFilterChange("status", e.target.value)}
+              className="input-field"
+            >
+              <option value="all">All statuses</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+              <option value="flagged">Flagged</option>
+            </select>
+            <select
+              value={filters.source}
+              onChange={(e) => handleFilterChange("source", e.target.value)}
+              className="input-field"
+            >
+              <option value="all">All sources</option>
+              <option value="manual">Manual Entry</option>
+              <option value="reseller">Reseller</option>
+              <option value="producer">Producer</option>
+            </select>
+            <select
+              value={filters.producerId}
+              onChange={(e) => handleFilterChange("producerId", e.target.value)}
+              className="input-field"
+            >
+              <option value="all">All producers</option>
+              {adminProducers.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.businessNameSi || p.businessName}
+                </option>
+              ))}
+            </select>
+            <select
+              value={filters.categoryId}
+              onChange={(e) => handleFilterChange("categoryId", e.target.value)}
+              className="input-field"
+            >
+              <option value="all">All categories</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.nameSi || c.name}
+                </option>
+              ))}
+            </select>
+            <select
+              value={filters.minRating}
+              onChange={(e) => handleFilterChange("minRating", e.target.value)}
+              className="input-field"
+            >
+              <option value="0">Any rating</option>
+              <option value="3">3★ or more</option>
+              <option value="4">4★ or more</option>
+              <option value="4.5">4.5★ or more</option>
+            </select>
+            <select
+              value={filters.sort}
+              onChange={(e) => handleFilterChange("sort", e.target.value)}
+              className="input-field"
+            >
+              <option value="newest">Newest first</option>
+              <option value="oldest">Oldest first</option>
+              <option value="price_asc">Price: low to high</option>
+              <option value="price_desc">Price: high to low</option>
+            </select>
+          </div>
+          <div className="overflow-x-auto">
+            {allProducts.length === 0 ? (
+              <p className="text-center text-gray-500 py-12">No products match your filters</p>
+            ) : (
+              <table className="w-full">
+                <thead>
+                  <tr className="text-left text-sm text-gray-500 border-b border-gray-200">
+                    <th className="pb-3">Product</th>
+                    <th className="pb-3">Price</th>
+                    <th className="pb-3">Source</th>
+                    <th className="pb-3">Status</th>
+                    <th className="pb-3">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {allProducts.map((product) => (
+                    <tr key={product.id} className="hover:bg-gray-50">
+                      <td className="py-4">
+                        <p className="font-medium text-gray-900">{product.nameSi}</p>
+                        <p className="text-xs text-gray-500">{product.name}</p>
+                      </td>
+                      <td className="py-4">
+                        <p className="text-sm font-bold text-primary">Rs. {product.price}</p>
+                      </td>
+                      <td className="py-4">
+                        <p className="text-sm text-gray-900">{product.sourceSite || product.producer?.user?.name || "N/A"}</p>
+                        {product.sourceUrl && (
+                          <p className="text-xs text-gray-500 truncate max-w-xs">{product.sourceUrl}</p>
+                        )}
+                      </td>
+                      <td className="py-4">
+                        <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                          product.active ? (product.flagged ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700") : "bg-gray-100 text-gray-600"
+                        }`}>
+                          {product.active ? (product.flagged ? "Flagged" : "Active") : "Inactive"}
+                        </span>
+                      </td>
+                      <td className="py-4">
+                        <div className="flex gap-1">
+                          {product.active ? (
+                            <button
+                              onClick={() => handleRemoveProduct(product.id)}
+                              className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200"
+                            >
+                              Remove
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleRestoreProduct(product.id)}
+                              className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200"
+                            >
+                              Restore
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+          {allPagination.totalPages > 1 && (
+            <div className="flex items-center justify-between mt-4">
+              <button
+                onClick={() => setAllPage((p) => Math.max(1, p - 1))}
+                disabled={allPage <= 1}
+                className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                ← Prev
+              </button>
+              <span className="text-sm text-gray-500">
+                Page {allPagination.page} of {allPagination.totalPages} ({allPagination.total} products)
+              </span>
+              <button
+                onClick={() => setAllPage((p) => Math.min(allPagination.totalPages, p + 1))}
+                disabled={allPage >= allPagination.totalPages}
+                className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Next →
+              </button>
+            </div>
           )}
         </div>
       )}

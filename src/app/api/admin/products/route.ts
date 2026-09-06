@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import { Prisma } from "@prisma/client";
 import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/prisma";
 
@@ -18,19 +19,103 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const all = searchParams.get("all") === "1";
 
-    const products = await prisma.product.findMany({
-      where: all
-        ? undefined
-        : {
-            OR: [{ flagged: true }, { active: false }],
-          },
-      include: {
-        producer: { include: { user: { select: { name: true } } } },
-      },
-      orderBy: { createdAt: "desc" },
-    });
+    if (!all) {
+      const products = await prisma.product.findMany({
+        where: {
+          OR: [{ flagged: true }, { active: false }],
+        },
+        include: {
+          producer: { include: { user: { select: { name: true } } } },
+        },
+        orderBy: { createdAt: "desc" },
+      });
+      return NextResponse.json({ products });
+    }
 
-    return NextResponse.json({ products });
+    const q = searchParams.get("q") || "";
+    const status = searchParams.get("status") || "all";
+    const source = searchParams.get("source") || "all";
+    const producerId = searchParams.get("producerId") || "all";
+    const categoryId = searchParams.get("categoryId") || "all";
+    const minRating = parseFloat(searchParams.get("minRating") || "0");
+    const sort = searchParams.get("sort") || "newest";
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
+    const perPage = Math.min(200, Math.max(1, parseInt(searchParams.get("perPage") || "20")));
+    const skip = (page - 1) * perPage;
+
+    const where: Prisma.ProductWhereInput = {};
+
+    if (q) {
+      where.OR = [
+        { name: { contains: q, mode: "insensitive" } },
+        { nameSi: { contains: q, mode: "insensitive" } },
+      ];
+    }
+
+    if (status === "active") where.active = true;
+    else if (status === "inactive") where.active = false;
+    else if (status === "flagged") where.flagged = true;
+
+    if (source === "manual") {
+      where.AND = [
+        { resellerSource: { is: null } },
+        { producer: { is: { user: { email: "reseller@fortune.lk" } } } },
+      ];
+    } else if (source === "reseller") {
+      where.resellerSource = { isNot: null };
+    } else if (source === "producer") {
+      where.AND = [
+        { resellerSource: { is: null } },
+        { NOT: { producer: { is: { user: { email: "reseller@fortune.lk" } } } } },
+      ];
+    }
+
+    if (producerId && producerId !== "all") where.producerId = producerId;
+    if (categoryId && categoryId !== "all") where.categoryId = categoryId;
+    if (minRating > 0) where.rating = { gte: minRating };
+
+    let orderBy: Prisma.ProductOrderByWithRelationInput = { createdAt: "desc" };
+    if (sort === "oldest") orderBy = { createdAt: "asc" };
+    else if (sort === "price_asc") orderBy = { price: "asc" };
+    else if (sort === "price_desc") orderBy = { price: "desc" };
+
+    const [products, total, categories, producers] = await Promise.all([
+      prisma.product.findMany({
+        where,
+        include: {
+          producer: { include: { user: { select: { name: true } } } },
+        },
+        orderBy,
+        skip,
+        take: perPage,
+      }),
+      prisma.product.count({ where }),
+      prisma.category.findMany({
+        select: { id: true, name: true, nameSi: true },
+        orderBy: { name: "asc" },
+      }),
+      prisma.producer.findMany({
+        select: {
+          id: true,
+          businessName: true,
+          businessNameSi: true,
+          user: { select: { name: true } },
+        },
+        orderBy: { businessName: "asc" },
+      }),
+    ]);
+
+    return NextResponse.json({
+      products,
+      pagination: {
+        page,
+        perPage,
+        total,
+        totalPages: Math.ceil(total / perPage),
+      },
+      categories,
+      producers,
+    });
   } catch (error) {
     console.error("Admin products error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
