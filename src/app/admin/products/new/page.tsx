@@ -12,6 +12,48 @@ interface Category {
   markupPercentage: number;
 }
 
+const MAX_FILE_SIZE = 3 * 1024 * 1024;
+const MAX_DIMENSION = 1000;
+
+async function compressImage(file: File): Promise<File> {
+  const isGif = file.type === "image/gif";
+  if (isGif || file.size <= MAX_FILE_SIZE * 0.6) {
+    return file;
+  }
+
+  try {
+    let bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+    let { width, height } = bitmap;
+
+    const scale = Math.min(1, MAX_DIMENSION / Math.max(width, height));
+    if (scale === 1 && file.type === "image/webp") {
+      bitmap.close();
+      return file;
+    }
+
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(width * scale) || 1;
+    canvas.height = Math.round(height * scale) || 1;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      bitmap.close();
+      return file;
+    }
+    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close();
+
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, "image/webp", 0.8)
+    );
+    if (!blob) return file;
+
+    const name = file.name.replace(/\.[^.]+$/, "") + ".webp";
+    return new File([blob], name, { type: "image/webp" });
+  } catch {
+    return file;
+  }
+}
+
 export default function AdminNewProductPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -76,8 +118,20 @@ export default function AdminNewProductPage() {
     const added: string[] = [];
 
     for (const file of Array.from(files)) {
+      if (file.size > MAX_FILE_SIZE) {
+        setError(`"${file.name}" is over 3 MB. Try a smaller image.`);
+        continue;
+      }
+
+      let uploadFile = file;
+      try {
+        uploadFile = await compressImage(file);
+      } catch {
+        // compression failed; fall through with the original file
+      }
+
       const fd = new FormData();
-      fd.append("file", file);
+      fd.append("file", uploadFile);
       try {
         const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
         const data = await res.json();
@@ -285,7 +339,7 @@ export default function AdminNewProductPage() {
             className="block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-primary-100 file:text-primary hover:file:bg-primary-200"
           />
           <p className="text-xs text-gray-500 mt-1">
-            {uploading ? "Uploading images..." : "Upload JPG, PNG, WebP, or GIF (max 3 MB each). Square 1:1 images work best."}
+            {uploading ? "Uploading images..." : "JPG, PNG, WebP, or GIF (max 3 MB, up to 1000px). Large photos are auto-resized to WebP. Square 1:1 images display best."}
           </p>
 
           {imageUrls.length > 0 && (
