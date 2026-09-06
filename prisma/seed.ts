@@ -6,7 +6,10 @@ const prisma = new PrismaClient();
 async function main() {
   console.log("Seeding database...");
 
-  const passwordHash = await bcrypt.hash("password123", 12);
+  const passwordHash = await bcrypt.hash(
+    process.env.SEED_DEMO_PASSWORD || "local-dev-seed-password-change-me",
+    12
+  );
 
   const categories = await Promise.all([
     prisma.category.upsert({
@@ -322,14 +325,6 @@ async function main() {
   console.log("  Producers: 4 (3 regular + 1 reseller, all verified except 1)");
   console.log("  Products: 5");
   console.log("  ScraperDomainProfile: shopzy.lk");
-  console.log("");
-  console.log("  Demo accounts (password: password123):");
-  console.log("  Buyer:       buyer@fortune.lk");
-  console.log("  Producer:    kamal@fortune.lk");
-  console.log("  Producer:    nimali@fortune.lk");
-  console.log("  Producer:    sunil@fortune.lk (pending verification)");
-  console.log("  Reseller:    reseller@fortune.lk");
-  console.log("  Admin:       admin@fortune.lk");
 }
 
 main()

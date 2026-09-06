@@ -91,13 +91,6 @@ export default function LoginPage() {
               Sign Up
             </Link>
           </p>
-
-          <div className="mt-4 p-3 bg-gray-50 rounded-lg text-xs text-gray-500">
-            <p className="font-medium">Demo accounts:</p>
-            <p>Buyer: buyer@fortune.lk / password123</p>
-            <p>Producer: kamal@fortune.lk / password123</p>
-            <p>Admin: admin@fortune.lk / password123</p>
-          </div>
         </form>
       </div>
     </div>

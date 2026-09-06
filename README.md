@@ -39,18 +39,6 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000)
 
-## Demo Accounts
-
-All passwords: `password123`
-
-| Role | Email |
-|------|-------|
-| Buyer | `buyer@fortune.lk` |
-| Producer (Approved) | `kamal@fortune.lk` |
-| Producer (Approved) | `nimali@fortune.lk` |
-| Producer (Pending) | `sunil@fortune.lk` |
-| Admin | `admin@fortune.lk` |
-
 ## Database Scripts
 
 ```bash
