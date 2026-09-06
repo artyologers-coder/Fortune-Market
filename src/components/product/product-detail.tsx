@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { getImagesList } from "@/lib/product-images";
 
 interface ProductDetailProps {
   product: {
@@ -88,9 +89,37 @@ export function ProductDetail({ product }: ProductDetailProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
       <div>
-        <div className="aspect-square bg-gray-100 rounded-xl flex items-center justify-center text-gray-300 text-8xl">
-          📦
-        </div>
+        {(() => {
+          const images = getImagesList(product.images);
+          if (images.length > 0) {
+            return (
+              <div className="space-y-2">
+                <img
+                  src={images[0]}
+                  alt={product.name}
+                  className="w-full aspect-square object-cover rounded-xl border border-gray-100"
+                />
+                {images.length > 1 && (
+                  <div className="grid grid-cols-4 gap-2">
+                    {images.slice(1).map((img, i) => (
+                      <img
+                        key={`${img}-${i}`}
+                        src={img}
+                        alt={`${product.name} ${i + 2}`}
+                        className="w-full aspect-square object-cover rounded-lg border border-gray-100"
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          }
+          return (
+            <div className="aspect-square bg-gray-100 rounded-xl flex items-center justify-center text-gray-300 text-8xl">
+              📦
+            </div>
+          );
+        })()}
       </div>
 
       <div>

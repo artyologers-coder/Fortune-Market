@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { getDictionary } from "@/lib/i18n";
 import Link from "next/link";
 import { Logo } from "@/components/ui/logo";
+import { ProductImage } from "@/components/product/product-image";
 
 export default function HomePage() {
   const dict = getDictionary("en");
@@ -131,9 +132,7 @@ async function FeaturedProducts() {
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
       {products.map((product) => (
         <Link key={product.id} href={`/product/${product.id}`} className="card">
-          <div className="aspect-square bg-gray-100 flex items-center justify-center text-gray-400 text-4xl">
-            📦
-          </div>
+          <ProductImage images={product.images} alt={product.name} />
           <div className="p-4">
             <h3 className="font-medium text-gray-900 text-sm mb-1 line-clamp-2">
               {product.name}

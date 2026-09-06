@@ -19,6 +19,9 @@ export default function AdminNewProductPage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [linkInput, setLinkInput] = useState("");
+  const [uploading, setUploading] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
@@ -31,7 +34,6 @@ export default function AdminNewProductPage() {
     unitSi: "කැබැල්ල",
     description: "",
     descriptionSi: "",
-    images: "",
   });
 
   useEffect(() => {
@@ -65,6 +67,51 @@ export default function AdminNewProductPage() {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploading(true);
+    setError("");
+    const added: string[] = [];
+
+    for (const file of Array.from(files)) {
+      const fd = new FormData();
+      fd.append("file", file);
+      try {
+        const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+        const data = await res.json();
+        if (res.ok && data.url) {
+          added.push(data.url);
+        } else {
+          setError(data.error || `Failed to upload ${file.name}`);
+        }
+      } catch {
+        setError(`Failed to upload ${file.name}`);
+      }
+    }
+
+    if (added.length > 0) {
+      setImageUrls((prev) => [...prev, ...added]);
+    }
+    setUploading(false);
+    e.target.value = "";
+  }
+
+  function addLinks() {
+    const urls = linkInput
+      .split(",")
+      .map((u) => u.trim())
+      .filter(Boolean);
+    if (urls.length === 0) return;
+    setImageUrls((prev) => [...prev, ...urls]);
+    setLinkInput("");
+  }
+
+  function removeImage(index: number) {
+    setImageUrls((prev) => prev.filter((_, i) => i !== index));
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
@@ -91,7 +138,7 @@ export default function AdminNewProductPage() {
           unitSi: form.unitSi || undefined,
           description: form.description || undefined,
           descriptionSi: form.descriptionSi || undefined,
-          images: form.images ? form.images.split(",").map((u) => u.trim()).filter(Boolean) : [],
+          images: imageUrls,
         }),
       });
 
@@ -99,7 +146,9 @@ export default function AdminNewProductPage() {
 
       if (res.ok) {
         setSuccess(true);
-        setForm({ name: "", nameSi: "", categoryId: "", price: "", originalPrice: "", stock: "0", unit: "piece", unitSi: "කැබැල්ල", description: "", descriptionSi: "", images: "" });
+        setImageUrls([]);
+        setLinkInput("");
+        setForm({ name: "", nameSi: "", categoryId: "", price: "", originalPrice: "", stock: "0", unit: "piece", unitSi: "කැබැල්ල", description: "", descriptionSi: "" });
       } else {
         setError(data.error || "Failed to create product");
       }
@@ -226,15 +275,53 @@ export default function AdminNewProductPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Images (comma-separated URLs)</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Product Images</label>
           <input
-            type="text"
-            value={form.images}
-            onChange={(e) => update("images", e.target.value)}
-            placeholder="https://example.com/img1.jpg, https://example.com/img2.jpg"
-            className="input-field"
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            multiple
+            onChange={handleFileChange}
+            disabled={uploading}
+            className="block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-primary-100 file:text-primary hover:file:bg-primary-200"
           />
-          <p className="text-xs text-gray-500 mt-1">Enter full image URLs separated by commas</p>
+          <p className="text-xs text-gray-500 mt-1">
+            {uploading ? "Uploading images..." : "Upload JPG, PNG, WebP, or GIF (max 3 MB each). Square 1:1 images work best."}
+          </p>
+
+          {imageUrls.length > 0 && (
+            <div className="flex flex-wrap gap-3 mt-3">
+              {imageUrls.map((url, i) => (
+                <div key={`${url}-${i}`} className="relative">
+                  <img
+                    src={url}
+                    alt={`Product image ${i + 1}`}
+                    className="w-24 h-24 aspect-square object-cover rounded-lg border border-gray-200"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeImage(i)}
+                    className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-600 text-white text-xs font-bold flex items-center justify-center hover:bg-red-700"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="flex gap-2 mt-3">
+            <input
+              type="text"
+              value={linkInput}
+              onChange={(e) => setLinkInput(e.target.value)}
+              placeholder="https://example.com/img1.jpg, https://example.com/img2.jpg"
+              className="input-field"
+            />
+            <button type="button" onClick={addLinks} className="btn-secondary whitespace-nowrap">
+              Add Links
+            </button>
+          </div>
+          <p className="text-xs text-gray-500 mt-1">Or paste full image URLs, separated by commas</p>
         </div>
 
         <div>

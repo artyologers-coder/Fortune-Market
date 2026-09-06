@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
 import type { Prisma } from "@prisma/client";
+import { ProductImage } from "@/components/product/product-image";
 
 type ProductWithProducer = Prisma.ProductGetPayload<{
   include: { producer: { include: { user: { select: { name: true } } } } };
@@ -72,9 +73,7 @@ export default async function CategoryPage({ params }: Props) {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
           {products.map((product) => (
             <Link key={product.id} href={`/product/${product.id}`} className="card">
-              <div className="aspect-square bg-gray-100 flex items-center justify-center text-gray-400 text-4xl">
-                📦
-              </div>
+              <ProductImage images={product.images} alt={product.name} />
               <div className="p-4">
                 <h3 className="font-medium text-gray-900 text-sm mb-1 line-clamp-2">
                   {product.name}
