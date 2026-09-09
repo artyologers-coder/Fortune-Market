@@ -333,7 +333,7 @@ export default function TermsPage() {
         <div className="text-center mb-10">
           <h1 className="section-title">Terms &amp; Conditions</h1>
           <p className="text-sm text-gray-500 mt-2">
-            Last updated: 2024 &nbsp;·&nbsp; Fortune Market — A project of
+            Last updated: 2026 &nbsp;·&nbsp; Fortune Market — A project of
             Artyologers
           </p>
         </div>
@@ -352,7 +352,7 @@ export default function TermsPage() {
         </div>
 
         <p className="text-center text-sm text-gray-500 mt-10">
-          © 2024 Fortune Market — A project of Artyologers. All rights
+          © 2026 Fortune Market — A project of Artyologers. All rights
           reserved.
         </p>
       </div>

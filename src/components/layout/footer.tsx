@@ -32,7 +32,7 @@ export function Footer() {
           </div>
         </div>
         <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-500">
-          © 2024 Fortune Market — A project of Artyologers. All rights reserved.
+          © 2026 Fortune Market — A project of Artyologers. All rights reserved.
         </div>
       </div>
     </footer>
