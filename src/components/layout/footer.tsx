@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Logo } from "@/components/ui/logo";
 
 export function Footer() {
@@ -15,7 +16,7 @@ export function Footer() {
           <div>
             <h4 className="text-white font-semibold mb-3">Quick Links</h4>
             <div className="flex flex-col gap-2 text-sm">
-              <a href="#" className="hover:text-white transition-colors">Terms &amp; Conditions</a>
+              <Link href="/terms" className="hover:text-white transition-colors">Terms &amp; Conditions</Link>
               <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
               <a href="#" className="hover:text-white transition-colors">Contact Us</a>
             </div>
@@ -31,7 +32,7 @@ export function Footer() {
           </div>
         </div>
         <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-500">
-          © 2024 Fortune Market. All rights reserved.
+          © 2024 Fortune Market — A project of Artyologers. All rights reserved.
         </div>
       </div>
     </footer>
