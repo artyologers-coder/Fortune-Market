@@ -79,6 +79,23 @@ interface ProducerOption {
   businessNameSi: string;
 }
 
+interface AdminUser {
+  id: string;
+  name: string | null;
+  email: string;
+  phone: string | null;
+  phoneVerified: boolean;
+  role: string;
+  createdAt: string;
+  producer: { verificationStatus: string } | null;
+}
+
+interface ResetModalData {
+  name: string;
+  email: string;
+  tempPassword: string;
+}
+
 export default function AdminPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -107,7 +124,11 @@ export default function AdminPage() {
   });
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"overview" | "verification" | "moderation" | "products" | "reseller-import" | "reseller-products" | "reseller-settings" | "orders" | "add-product">("overview");
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [userSearch, setUserSearch] = useState("");
+  const [resettingUserId, setResettingUserId] = useState<string | null>(null);
+  const [resetModal, setResetModal] = useState<ResetModalData | null>(null);
+  const [activeTab, setActiveTab] = useState<"overview" | "verification" | "moderation" | "products" | "reseller-import" | "reseller-products" | "reseller-settings" | "orders" | "users" | "add-product">("overview");
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -126,11 +147,12 @@ export default function AdminPage() {
 
   async function fetchData() {
     try {
-      const [statsRes, producersRes, productsRes, ordersRes] = await Promise.all([
+      const [statsRes, producersRes, productsRes, ordersRes, usersRes] = await Promise.all([
         fetch("/api/admin"),
         fetch("/api/admin/producers"),
         fetch("/api/admin/products"),
         fetch("/api/orders"),
+        fetch("/api/admin/users"),
       ]);
 
       if (statsRes.ok) {
@@ -151,6 +173,11 @@ export default function AdminPage() {
       if (ordersRes.ok) {
         const data = await ordersRes.json();
         setOrders(data.orders || []);
+      }
+
+      if (usersRes.ok) {
+        const data = await usersRes.json();
+        setUsers(data.users || []);
       }
     } catch {
       console.error("Failed to fetch admin data");
@@ -252,6 +279,43 @@ export default function AdminPage() {
     }
   }
 
+  async function handleResetPassword(user: AdminUser) {
+    if (!confirm(`Reset password for ${user.name || user.email}? The current password will stop working immediately.`)) {
+      return;
+    }
+    setResettingUserId(user.id);
+    setResetModal(null);
+    try {
+      const res = await fetch(`/api/admin/users/${user.id}/reset-password`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setResetModal({
+          name: user.name || "",
+          email: user.email,
+          tempPassword: data.tempPassword,
+        });
+      } else {
+        alert(data.error || "Failed to reset password");
+      }
+    } catch {
+      alert("Failed to reset password");
+    } finally {
+      setResettingUserId(null);
+    }
+  }
+
+  const userQuery = userSearch.trim().toLowerCase();
+  const filteredUsers = userQuery
+    ? users.filter(
+        (u) =>
+          (u.name || "").toLowerCase().includes(userQuery) ||
+          u.email.toLowerCase().includes(userQuery) ||
+          (u.phone || "").toLowerCase().includes(userQuery)
+      )
+    : users;
+
   if (loading) {
     return <div className="page-container text-center text-gray-500">Loading...</div>;
   }
@@ -261,7 +325,7 @@ export default function AdminPage() {
       <h1 className="text-3xl font-bold text-gray-900 mb-8">Admin Panel</h1>
 
       <div className="flex gap-2 mb-6 border-b border-gray-200">
-        {(["overview", "verification", "moderation", "products", "orders", "reseller-import", "reseller-products", "reseller-settings", "add-product"] as const)
+        {(["overview", "verification", "moderation", "products", "orders", "users", "reseller-import", "reseller-products", "reseller-settings", "add-product"] as const)
           .filter((tab) => isFeatureEnabled("COMMISSION_SYSTEM") || !tab.startsWith("reseller-"))
           .map((tab) => (
           <button
@@ -273,7 +337,7 @@ export default function AdminPage() {
                 : "border-transparent text-gray-500 hover:text-gray-700"
             }`}
           >
-            {tab === "overview" ? "Overview" : tab === "verification" ? "Verification" : tab === "moderation" ? "Moderation" : tab === "products" ? "Products" : tab === "orders" ? "Orders" : tab === "reseller-import" ? "Reseller Import" : tab === "reseller-products" ? "Reseller Products" : tab === "reseller-settings" ? "Reseller Settings" : "Add Product"}
+            {tab === "overview" ? "Overview" : tab === "verification" ? "Verification" : tab === "moderation" ? "Moderation" : tab === "products" ? "Products" : tab === "orders" ? "Orders" : tab === "users" ? "Users" : tab === "reseller-import" ? "Reseller Import" : tab === "reseller-products" ? "Reseller Products" : tab === "reseller-settings" ? "Reseller Settings" : "Add Product"}
           </button>
         ))}
       </div>
@@ -550,6 +614,110 @@ export default function AdminPage() {
           <a href="/admin/reseller-settings" className="btn-primary inline-block">
             Open Reseller Settings
           </a>
+        </div>
+      )}
+
+      {activeTab === "users" && (
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <h2 className="text-lg font-semibold text-gray-900">Users</h2>
+            <input
+              type="text"
+              placeholder="Search by name, email or phone..."
+              value={userSearch}
+              onChange={(e) => setUserSearch(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="text-left text-sm text-gray-500 border-b border-gray-200">
+                  <th className="pb-3">Name</th>
+                  <th className="pb-3">Email</th>
+                  <th className="pb-3">Phone</th>
+                  <th className="pb-3">Type</th>
+                  <th className="pb-3">Status</th>
+                  <th className="pb-3">Joined</th>
+                  <th className="pb-3">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {filteredUsers.map((user) => (
+                  <tr key={user.id} className="hover:bg-gray-50">
+                    <td className="py-4 text-sm font-medium text-gray-900">{user.name || "—"}</td>
+                    <td className="py-4 text-sm text-gray-700">{user.email}</td>
+                    <td className="py-4 text-sm text-gray-500">{user.phone || "—"}</td>
+                    <td className="py-4 text-sm text-gray-700">{user.role === "PRODUCER" ? "Seller" : "Buyer"}</td>
+                    <td className="py-4">
+                      {user.role === "PRODUCER" ? (
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          user.producer?.verificationStatus === "APPROVED"
+                            ? "bg-green-100 text-green-800"
+                            : user.producer?.verificationStatus === "PENDING"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : "bg-red-100 text-red-800"
+                        }`}>
+                          {user.producer?.verificationStatus || "—"}
+                        </span>
+                      ) : (
+                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                          {user.phoneVerified ? "Phone verified" : "Phone not verified"}
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-4 text-sm text-gray-500">{new Date(user.createdAt).toLocaleDateString("en-LK")}</td>
+                    <td className="py-4">
+                      <button
+                        onClick={() => handleResetPassword(user)}
+                        disabled={resettingUserId === user.id}
+                        className="text-xs px-3 py-1.5 bg-primary text-white rounded hover:bg-primary-dark disabled:opacity-40 transition-colors"
+                      >
+                        {resettingUserId === user.id ? "Resetting..." : "Reset Password"}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {filteredUsers.length === 0 && (
+                  <tr>
+                    <td colSpan={7} className="py-12 text-center text-gray-500">No users found</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {resetModal && (
+            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-1">Temporary Password Generated</h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  {resetModal.name && <span className="font-medium">{resetModal.name}: </span>}
+                  {resetModal.email}
+                </p>
+                <div className="flex items-center gap-2 mb-4">
+                  <code className="flex-1 bg-gray-100 rounded-lg px-3 py-2 text-sm font-mono text-gray-900 break-all select-all">
+                    {resetModal.tempPassword}
+                  </code>
+                  <button
+                    onClick={() => navigator.clipboard.writeText(resetModal.tempPassword)}
+                    className="text-xs px-3 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors whitespace-nowrap"
+                  >
+                    Copy
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500 mb-4">
+                  Share this confidentially. The previous password no longer works. Save it in a password manager.
+                </p>
+                <button
+                  onClick={() => setResetModal(null)}
+                  className="w-full px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
