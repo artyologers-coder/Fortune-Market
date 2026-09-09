@@ -197,13 +197,15 @@ export default function CheckoutPage() {
                     <p className="text-xs text-gray-500">Pay when you receive your order</p>
                   </div>
                 </label>
-                <label className="flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer border-gray-200">
-                  <input type="radio" name="payment" value="card" checked={form.paymentMethod === "card"} onChange={(e) => update("paymentMethod", e.target.value)} />
-                  <div>
-                    <p className="font-medium text-sm">Card Payment</p>
-                    <p className="text-xs text-gray-500">Pay securely online (stubbed for demo)</p>
-                  </div>
-                </label>
+                {isFeatureEnabled("ONLINE_PAYMENTS") && (
+                  <label className="flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer border-gray-200">
+                    <input type="radio" name="payment" value="card" checked={form.paymentMethod === "card"} onChange={(e) => update("paymentMethod", e.target.value)} />
+                    <div>
+                      <p className="font-medium text-sm">Card Payment</p>
+                      <p className="text-xs text-gray-500">Pay securely online (stubbed for demo)</p>
+                    </div>
+                  </label>
+                )}
               </div>
             </div>
           </div>
