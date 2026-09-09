@@ -135,7 +135,7 @@ export default function OrdersPage() {
                 ))}
               </div>
 
-              {order.items.some((item) => item.product.resellerSource) && (
+              {isFeatureEnabled("COMMISSION_SYSTEM") && order.items.some((item) => item.product.resellerSource) && (
                 <div className="border-t pt-4 mt-4 space-y-3">
                   <h4 className="text-sm font-medium text-gray-700">Reseller Order Items</h4>
                   {order.items

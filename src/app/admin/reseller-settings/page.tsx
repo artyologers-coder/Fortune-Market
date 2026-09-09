@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 
 interface Category {
   id: string;
@@ -51,6 +52,10 @@ export default function ResellerSettingsPage() {
     if (status === "authenticated") {
       const role = session?.user?.role;
       if (role !== "ADMIN") {
+        router.push("/");
+        return;
+      }
+      if (!isFeatureEnabled("COMMISSION_SYSTEM")) {
         router.push("/");
         return;
       }

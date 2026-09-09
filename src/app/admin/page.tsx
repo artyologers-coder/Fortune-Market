@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 
 interface Stats {
   totalProducers: number;
@@ -260,7 +261,9 @@ export default function AdminPage() {
       <h1 className="text-3xl font-bold text-gray-900 mb-8">Admin Panel</h1>
 
       <div className="flex gap-2 mb-6 border-b border-gray-200">
-        {(["overview", "verification", "moderation", "products", "orders", "reseller-import", "reseller-products", "reseller-settings", "add-product"] as const).map((tab) => (
+        {(["overview", "verification", "moderation", "products", "orders", "reseller-import", "reseller-products", "reseller-settings", "add-product"] as const)
+          .filter((tab) => isFeatureEnabled("COMMISSION_SYSTEM") || !tab.startsWith("reseller-"))
+          .map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -526,7 +529,7 @@ export default function AdminPage() {
         </div>
       )}
 
-      {activeTab === "reseller-import" && (
+      {isFeatureEnabled("COMMISSION_SYSTEM") && activeTab === "reseller-import" && (
         <div className="space-y-4">
           <a href="/admin/reseller-import" className="btn-primary inline-block">
             Open Reseller Import
@@ -534,7 +537,7 @@ export default function AdminPage() {
         </div>
       )}
 
-      {activeTab === "reseller-products" && (
+      {isFeatureEnabled("COMMISSION_SYSTEM") && activeTab === "reseller-products" && (
         <div className="space-y-4">
           <a href="/admin/reseller-products" className="btn-primary inline-block">
             Open Reseller Products
@@ -542,7 +545,7 @@ export default function AdminPage() {
         </div>
       )}
 
-      {activeTab === "reseller-settings" && (
+      {isFeatureEnabled("COMMISSION_SYSTEM") && activeTab === "reseller-settings" && (
         <div className="space-y-4">
           <a href="/admin/reseller-settings" className="btn-primary inline-block">
             Open Reseller Settings
@@ -564,7 +567,7 @@ export default function AdminPage() {
                     <th className="pb-3">Total</th>
                     <th className="pb-3">Status</th>
                     <th className="pb-3">Date</th>
-                    <th className="pb-3">Reseller Items</th>
+                    {isFeatureEnabled("COMMISSION_SYSTEM") && <th className="pb-3">Reseller Items</th>}
                     <th className="pb-3">Actions</th>
                   </tr>
                 </thead>
@@ -598,6 +601,7 @@ export default function AdminPage() {
                       <td className="py-4 text-sm text-gray-500">
                         {new Date(order.createdAt).toLocaleDateString("en-LK")}
                       </td>
+                      {isFeatureEnabled("COMMISSION_SYSTEM") && (
                       <td className="py-4">
                         {order.items.filter((i) => i.product.resellerSource).length > 0 ? (
                           <div className="space-y-1">
@@ -613,6 +617,7 @@ export default function AdminPage() {
                           <span className="text-xs text-gray-400">—</span>
                         )}
                       </td>
+                      )}
                       <td className="py-4">
                         <div className="flex gap-1">
                           <a
@@ -621,7 +626,7 @@ export default function AdminPage() {
                           >
                             View
                           </a>
-                          {order.items.some((i) => i.product.resellerSource) && order.status !== "FORWARDED_TO_SUPPLIER" && (
+                          {isFeatureEnabled("COMMISSION_SYSTEM") && order.items.some((i) => i.product.resellerSource) && order.status !== "FORWARDED_TO_SUPPLIER" && (
                             <button
                               onClick={async () => {
                                 const res = await fetch(`/api/admin/orders/${order.id}`, {

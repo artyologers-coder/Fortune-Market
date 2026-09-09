@@ -3,8 +3,13 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { scrapeProductUrl } from "@/lib/reseller/scraper";
 import { prisma } from "@/lib/prisma";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 
 export async function POST(req: NextRequest) {
+  if (!isFeatureEnabled("COMMISSION_SYSTEM")) {
+    return NextResponse.json({ error: "Feature not available" }, { status: 403 });
+  }
+
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user || session.user.role !== "ADMIN") {

@@ -54,6 +54,10 @@ export async function POST(req: NextRequest) {
     }
 
     if (paymentMethod === "card") {
+      if (!isFeatureEnabled("ONLINE_PAYMENTS")) {
+        return NextResponse.json({ error: "Feature not available" }, { status: 403 });
+      }
+
       const paymentResult = await paymentGateway.createPayment(totalAmount, "LKR", {
         userId,
       });

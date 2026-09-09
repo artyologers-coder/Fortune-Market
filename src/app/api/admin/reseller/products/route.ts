@@ -4,8 +4,13 @@ import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/prisma";
 import { computeSellingPrice } from "@/lib/reseller/markup";
 import { scrapeProductUrl } from "@/lib/reseller/scraper";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 
 export async function GET() {
+  if (!isFeatureEnabled("COMMISSION_SYSTEM")) {
+    return NextResponse.json({ error: "Feature not available" }, { status: 403 });
+  }
+
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user || session.user.role !== "ADMIN") {
@@ -59,6 +64,10 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  if (!isFeatureEnabled("COMMISSION_SYSTEM")) {
+    return NextResponse.json({ error: "Feature not available" }, { status: 403 });
+  }
+
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user || session.user.role !== "ADMIN") {
