@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 
 interface CartItem {
   productId: string;
@@ -110,6 +111,15 @@ export default function CheckoutPage() {
     return (
       <div className="page-container text-center py-16">
         <p className="text-gray-500">Your cart is empty</p>
+      </div>
+    );
+  }
+
+  if (!isFeatureEnabled("COD_ORDERS")) {
+    return (
+      <div className="page-container text-center py-16">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Coming Soon</h2>
+        <p className="text-gray-500">Order placement is not yet available.</p>
       </div>
     );
   }

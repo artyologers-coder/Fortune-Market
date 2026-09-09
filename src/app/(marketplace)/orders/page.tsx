@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 
 interface OrderItem {
   id: string;
@@ -75,6 +76,15 @@ export default function OrdersPage() {
         });
     }
   }, [status, router]);
+
+  if (!isFeatureEnabled("ORDER_HISTORY")) {
+    return (
+      <div className="page-container text-center py-20">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Coming Soon</h2>
+        <p className="text-gray-500">Order history is not yet available.</p>
+      </div>
+    );
+  }
 
   if (loading) {
     return <div className="page-container text-center text-gray-500">Loading...</div>;

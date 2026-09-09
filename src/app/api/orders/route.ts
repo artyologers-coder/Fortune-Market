@@ -3,8 +3,13 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/prisma";
 import { paymentGateway } from "@/lib/payment-gateway";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 
 export async function POST(req: NextRequest) {
+  if (!isFeatureEnabled("COD_ORDERS")) {
+    return NextResponse.json({ error: "Feature not available" }, { status: 403 });
+  }
+
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {

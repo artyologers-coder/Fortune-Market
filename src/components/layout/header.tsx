@@ -5,6 +5,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useState } from "react";
 import { useCartCount } from "@/lib/cart-context";
 import { Logo } from "@/components/ui/logo";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 
 export function Header() {
   const { data: session } = useSession();
@@ -22,26 +23,32 @@ export function Header() {
           </Link>
 
           <nav className="hidden md:flex items-center gap-6">
-            <Link href="/search" className="text-gray-600 hover:text-primary text-sm">
-              Search
-            </Link>
-            <Link href="/offers" className="text-gray-600 hover:text-primary text-sm">
-              Offers
-            </Link>
-            <Link href="/cart" className="text-gray-600 hover:text-primary text-sm relative">
-              Cart
-              {cartCount > 0 && (
-                <span className="absolute -top-2 -right-4 bg-accent text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
-                  {cartCount}
-                </span>
-              )}
-            </Link>
-            {session && (
+            {isFeatureEnabled("PRODUCTS") && (
+              <Link href="/search" className="text-gray-600 hover:text-primary text-sm">
+                Search
+              </Link>
+            )}
+            {isFeatureEnabled("PRODUCTS") && (
+              <Link href="/offers" className="text-gray-600 hover:text-primary text-sm">
+                Offers
+              </Link>
+            )}
+            {isFeatureEnabled("PRODUCTS") && (
+              <Link href="/cart" className="text-gray-600 hover:text-primary text-sm relative">
+                Cart
+                {cartCount > 0 && (
+                  <span className="absolute -top-2 -right-4 bg-accent text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                    {cartCount}
+                  </span>
+                )}
+              </Link>
+            )}
+            {isFeatureEnabled("ORDER_HISTORY") && session && (
               <Link href="/orders" className="text-gray-600 hover:text-primary text-sm">
                 Orders
               </Link>
             )}
-            {role === "PRODUCER" && (
+            {isFeatureEnabled("PRODUCER_ACCOUNTS") && role === "PRODUCER" && (
               <Link href="/producer/dashboard" className="text-gray-600 hover:text-primary text-sm">
                 Dashboard
               </Link>
@@ -64,7 +71,7 @@ export function Header() {
                   Logout
                 </button>
               </div>
-            ) : (
+            ) : isFeatureEnabled("BUYER_ACCOUNTS") ? (
               <>
                 <Link href="/auth/login" className="btn-ghost text-sm">
                   Login
@@ -73,7 +80,7 @@ export function Header() {
                   Sign Up
                 </Link>
               </>
-            )}
+            ) : null}
           </div>
 
           <button
@@ -93,13 +100,19 @@ export function Header() {
         {mobileOpen && (
           <div className="md:hidden pb-4 border-t border-gray-100 mt-2 pt-4">
             <div className="flex flex-col gap-3">
-              <Link href="/search" className="text-gray-600 hover:text-primary text-sm" onClick={() => setMobileOpen(false)}>Search</Link>
-              <Link href="/offers" className="text-gray-600 hover:text-primary text-sm" onClick={() => setMobileOpen(false)}>Offers</Link>
-              <Link href="/cart" className="text-gray-600 hover:text-primary text-sm" onClick={() => setMobileOpen(false)}>Cart</Link>
-              {session && (
+              {isFeatureEnabled("PRODUCTS") && (
+                <Link href="/search" className="text-gray-600 hover:text-primary text-sm" onClick={() => setMobileOpen(false)}>Search</Link>
+              )}
+              {isFeatureEnabled("PRODUCTS") && (
+                <Link href="/offers" className="text-gray-600 hover:text-primary text-sm" onClick={() => setMobileOpen(false)}>Offers</Link>
+              )}
+              {isFeatureEnabled("PRODUCTS") && (
+                <Link href="/cart" className="text-gray-600 hover:text-primary text-sm" onClick={() => setMobileOpen(false)}>Cart</Link>
+              )}
+              {isFeatureEnabled("ORDER_HISTORY") && session && (
                 <Link href="/orders" className="text-gray-600 hover:text-primary text-sm" onClick={() => setMobileOpen(false)}>Orders</Link>
               )}
-              {role === "PRODUCER" && (
+              {isFeatureEnabled("PRODUCER_ACCOUNTS") && role === "PRODUCER" && (
                 <Link href="/producer/dashboard" className="text-gray-600 hover:text-primary text-sm" onClick={() => setMobileOpen(false)}>Dashboard</Link>
               )}
               {role === "ADMIN" && (
@@ -112,12 +125,12 @@ export function Header() {
                 >
                   Logout
                 </button>
-              ) : (
+              ) : isFeatureEnabled("BUYER_ACCOUNTS") ? (
                 <>
                   <Link href="/auth/login" className="text-gray-600 hover:text-primary text-sm" onClick={() => setMobileOpen(false)}>Login</Link>
                   <Link href="/auth/signup" className="text-primary font-medium text-sm" onClick={() => setMobileOpen(false)}>Sign Up</Link>
                 </>
-              )}
+              ) : null}
             </div>
           </div>
         )}

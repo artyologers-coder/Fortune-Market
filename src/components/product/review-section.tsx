@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 
 interface Review {
   id: string;
@@ -23,6 +24,10 @@ export function ReviewSection({ productId }: ReviewSectionProps) {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  if (!isFeatureEnabled("REVIEWS")) {
+    return null;
+  }
 
   useEffect(() => {
     fetch(`/api/reviews?productId=${productId}`)

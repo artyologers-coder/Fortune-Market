@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 
 interface Producer {
   id: string;
@@ -41,6 +42,16 @@ interface Order {
 export default function ProducerDashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
+
+  if (!isFeatureEnabled("PRODUCER_ACCOUNTS")) {
+    return (
+      <div className="page-container text-center py-20">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Coming Soon</h2>
+        <p className="text-gray-500">Producer dashboard is not yet available.</p>
+      </div>
+    );
+  }
+
   const [producer, setProducer] = useState<Producer | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);

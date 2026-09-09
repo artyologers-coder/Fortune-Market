@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Suspense } from "react";
 import { ProductImage } from "@/components/product/product-image";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 
 interface Product {
   id: string;
@@ -33,6 +34,15 @@ function SearchContent() {
   const [sort, setSort] = useState(searchParams.get("sort") || "");
   const [page, setPage] = useState(parseInt(searchParams.get("page") || "1"));
   const [totalPages, setTotalPages] = useState(1);
+
+  if (!isFeatureEnabled("PRODUCTS")) {
+    return (
+      <div className="page-container text-center py-20">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Coming Soon</h2>
+        <p className="text-gray-500">Product listings are not yet available.</p>
+      </div>
+    );
+  }
 
   useEffect(() => {
     async function fetchProducts() {

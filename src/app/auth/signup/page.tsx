@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Logo } from "@/components/ui/logo";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -70,6 +71,21 @@ export default function SignupPage() {
     }
   }
 
+  const buyerEnabled = isFeatureEnabled("BUYER_ACCOUNTS");
+  const producerEnabled = isFeatureEnabled("PRODUCER_ACCOUNTS");
+
+  if (!buyerEnabled && !producerEnabled) {
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center px-4">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Coming Soon</h1>
+          <p className="text-gray-500 mb-6">Account registration is not yet available.</p>
+          <Link href="/" className="btn-primary">Go to Homepage</Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4">
       <div className="w-full max-w-md">
@@ -120,33 +136,41 @@ export default function SignupPage() {
                 required
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Account Type</label>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => update("role", "BUYER")}
-                  className={`p-3 rounded-lg border-2 text-center transition-colors ${
-                    form.role === "BUYER"
-                      ? "border-primary bg-primary-50 text-primary font-medium"
-                      : "border-gray-200 text-gray-600 hover:border-gray-300"
-                  }`}
-                >
-                  Buyer
-                </button>
-                <button
-                  type="button"
-                  onClick={() => update("role", "PRODUCER")}
-                  className={`p-3 rounded-lg border-2 text-center transition-colors ${
-                    form.role === "PRODUCER"
-                      ? "border-primary bg-primary-50 text-primary font-medium"
-                      : "border-gray-200 text-gray-600 hover:border-gray-300"
-                  }`}
-                >
-                  Producer
-                </button>
+            {buyerEnabled && producerEnabled && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Account Type</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => update("role", "BUYER")}
+                    className={`p-3 rounded-lg border-2 text-center transition-colors ${
+                      form.role === "BUYER"
+                        ? "border-primary bg-primary-50 text-primary font-medium"
+                        : "border-gray-200 text-gray-600 hover:border-gray-300"
+                    }`}
+                  >
+                    Buyer
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => update("role", "PRODUCER")}
+                    className={`p-3 rounded-lg border-2 text-center transition-colors ${
+                      form.role === "PRODUCER"
+                        ? "border-primary bg-primary-50 text-primary font-medium"
+                        : "border-gray-200 text-gray-600 hover:border-gray-300"
+                    }`}
+                  >
+                    Producer
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
+            {!buyerEnabled && producerEnabled && (
+              <input type="hidden" name="role" value="PRODUCER" />
+            )}
+            {buyerEnabled && !producerEnabled && (
+              <input type="hidden" name="role" value="BUYER" />
+            )}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
               <input

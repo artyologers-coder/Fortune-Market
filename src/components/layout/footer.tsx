@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Logo } from "@/components/ui/logo";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 
 export function Footer() {
   return (
@@ -21,15 +22,17 @@ export function Footer() {
               <Link href="/contact" className="hover:text-white transition-colors">Contact Us</Link>
             </div>
           </div>
-          <div>
-            <h4 className="text-white font-semibold mb-3">Categories</h4>
-            <div className="flex flex-col gap-2 text-sm">
-              <a href="/category/foods" className="hover:text-white transition-colors">Fortune Foods</a>
-              <a href="/category/crafts" className="hover:text-white transition-colors">Fortune Crafts</a>
-              <a href="/category/naturals" className="hover:text-white transition-colors">Fortune Naturals</a>
-              <a href="/category/fashion" className="hover:text-white transition-colors">Fortune Fashion</a>
+          {isFeatureEnabled("PRODUCTS") && (
+            <div>
+              <h4 className="text-white font-semibold mb-3">Categories</h4>
+              <div className="flex flex-col gap-2 text-sm">
+                <a href="/category/foods" className="hover:text-white transition-colors">Fortune Foods</a>
+                <a href="/category/crafts" className="hover:text-white transition-colors">Fortune Crafts</a>
+                <a href="/category/naturals" className="hover:text-white transition-colors">Fortune Naturals</a>
+                <a href="/category/fashion" className="hover:text-white transition-colors">Fortune Fashion</a>
+              </div>
             </div>
-          </div>
+          )}
         </div>
         <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-500">
           © 2026 Fortune Market — A project of Artyologers. All rights reserved.
