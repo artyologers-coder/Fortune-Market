@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import { CreativeDialog } from "@/components/producer/creative-dialog";
+import { CreativePromptNotice } from "@/components/producer/creative-prompt-notice";
 import { ImageManager } from "@/components/product/image-manager";
 
 type Tab = "manual" | "import";
@@ -400,6 +401,7 @@ function ProducerListingsContent() {
               onChange={(images) => setForm((prev) => ({ ...prev, images }))}
               productId={editId || undefined}
             />
+            <CreativePromptNotice />
           </div>
 
           <div className="flex items-center gap-2">

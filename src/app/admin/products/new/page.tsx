@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { ImageManager } from "@/components/product/image-manager";
+import { CreativePromptNotice } from "@/components/producer/creative-prompt-notice";
 
 interface Category {
   id: string;
@@ -230,6 +231,7 @@ export default function AdminNewProductPage() {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Product Images</label>
           <ImageManager images={imageUrls} onChange={setImageUrls} />
+          <CreativePromptNotice />
           <p className="text-xs text-gray-500 mt-1">
             JPG, PNG, WebP, or GIF (max 3 MB). Square 1:1 images display best.
           </p>
