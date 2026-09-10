@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { ImageManager } from "@/components/product/image-manager";
 
 interface Category {
@@ -13,13 +13,17 @@ interface Category {
   markupPercentage: number;
 }
 
-export default function AdminNewProductPage() {
+export default function AdminEditProductPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const params = useParams();
+  const productId = params.id as string;
+
   const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
 
   const [form, setForm] = useState({
@@ -33,6 +37,7 @@ export default function AdminNewProductPage() {
     unitSi: "කැබැල්ල",
     description: "",
     descriptionSi: "",
+    active: true,
   });
 
   useEffect(() => {
@@ -46,40 +51,51 @@ export default function AdminNewProductPage() {
         router.push("/");
         return;
       }
-      fetchCategories();
+      Promise.all([
+        fetch("/api/admin/reseller/categories").then((r) => r.json()).catch(() => ({ categories: [] })),
+        fetch(`/api/admin/products/${productId}`).then((r) => r.json()).catch(() => ({ product: null })),
+      ]).then(([catData, prodData]) => {
+        setCategories(catData.categories || []);
+        const product = prodData.product;
+        if (product) {
+          let images: string[] = [];
+          try {
+            images = JSON.parse(product.images || "[]");
+          } catch { /* ignore */ }
+          setForm({
+            name: product.name || "",
+            nameSi: product.nameSi || "",
+            categoryId: product.categoryId || "",
+            price: product.price != null ? String(product.price) : "",
+            originalPrice: product.originalPrice != null ? String(product.originalPrice) : "",
+            stock: product.stock != null ? String(product.stock) : "0",
+            unit: product.unit || "piece",
+            unitSi: product.unitSi || "කැබැල්ල",
+            description: product.description || "",
+            descriptionSi: product.descriptionSi || "",
+            active: product.active !== false,
+          });
+          setImageUrls(images);
+        } else {
+          setError("Product not found");
+        }
+        setLoading(false);
+      });
     }
-  }, [session, status, router]);
+  }, [session, status, router, productId]);
 
-  async function fetchCategories() {
-    try {
-      const res = await fetch("/api/admin/reseller/categories");
-      if (res.ok) {
-        const data = await res.json();
-        setCategories(data.categories || []);
-      }
-    } catch {
-      console.error("Failed to fetch categories");
-    }
-  }
-
-  function update(field: string, value: string) {
+  function update(field: string, value: string | boolean) {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
+    setSaving(true);
     setError("");
 
-    if (!form.name || !form.categoryId || !form.price) {
-      setError("Name, category, and price are required");
-      setLoading(false);
-      return;
-    }
-
     try {
-      const res = await fetch("/api/admin/products", {
-        method: "POST",
+      const res = await fetch(`/api/admin/products/${productId}`, {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: form.name,
@@ -87,38 +103,39 @@ export default function AdminNewProductPage() {
           categoryId: form.categoryId,
           price: form.price,
           originalPrice: form.originalPrice || undefined,
-          stock: form.stock || undefined,
-          unit: form.unit || undefined,
-          unitSi: form.unitSi || undefined,
-          description: form.description || undefined,
-          descriptionSi: form.descriptionSi || undefined,
+          stock: form.stock,
+          unit: form.unit,
+          unitSi: form.unitSi,
+          description: form.description,
+          descriptionSi: form.descriptionSi,
           images: imageUrls,
+          active: form.active,
         }),
       });
 
       const data = await res.json();
-
       if (res.ok) {
         setSuccess(true);
-        setImageUrls([]);
-        setForm({ name: "", nameSi: "", categoryId: "", price: "", originalPrice: "", stock: "0", unit: "piece", unitSi: "කැබැල්ල", description: "", descriptionSi: "" });
       } else {
-        setError(data.error || "Failed to create product");
+        setError(data.error || "Failed to update product");
       }
     } catch {
       setError("Something went wrong");
     }
+    setSaving(false);
+  }
 
-    setLoading(false);
+  if (loading) {
+    return <div className="page-container text-center text-gray-500">Loading product...</div>;
   }
 
   return (
     <div className="page-container max-w-3xl mx-auto">
-      <h1 className="text-3xl font-bold text-gray-900 mb-6">Add Product Manually</h1>
+      <h1 className="text-3xl font-bold text-gray-900 mb-6">Edit Product</h1>
 
       {success && (
         <div className="bg-green-50 text-green-700 p-4 rounded-lg mb-6">
-          Product created successfully!
+          Product updated successfully!
         </div>
       )}
 
@@ -161,7 +178,7 @@ export default function AdminNewProductPage() {
             <option value="">Select category</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>
-                {c.nameSi} ({c.name}) — {c.markupPercentage}% markup
+                {c.nameSi} ({c.name})
               </option>
             ))}
           </select>
@@ -180,7 +197,6 @@ export default function AdminNewProductPage() {
               required
             />
           </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Original Price (Rs.)</label>
             <input
@@ -205,7 +221,6 @@ export default function AdminNewProductPage() {
               min="0"
             />
           </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Unit (English)</label>
             <input
@@ -215,7 +230,6 @@ export default function AdminNewProductPage() {
               className="input-field"
             />
           </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Unit (Sinhala)</label>
             <input
@@ -229,10 +243,11 @@ export default function AdminNewProductPage() {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Product Images</label>
-          <ImageManager images={imageUrls} onChange={setImageUrls} />
-          <p className="text-xs text-gray-500 mt-1">
-            JPG, PNG, WebP, or GIF (max 3 MB). Square 1:1 images display best.
-          </p>
+          <ImageManager
+            images={imageUrls}
+            onChange={setImageUrls}
+            productId={productId}
+          />
         </div>
 
         <div>
@@ -255,9 +270,29 @@ export default function AdminNewProductPage() {
           />
         </div>
 
-        <div className="flex justify-end pt-4 border-t border-gray-200">
-          <button type="submit" disabled={loading} className="btn-primary">
-            {loading ? "Creating..." : "Create Product"}
+        <div className="flex items-center gap-2">
+          <input
+            id="active"
+            type="checkbox"
+            checked={form.active}
+            onChange={(e) => update("active", e.target.checked)}
+            className="w-4 h-4"
+          />
+          <label htmlFor="active" className="text-sm text-gray-700">
+            Listed on marketplace
+          </label>
+        </div>
+
+        <div className="flex justify-between pt-4 border-t border-gray-200">
+          <button
+            type="button"
+            onClick={() => router.push("/admin/products/new")}
+            className="btn-ghost"
+          >
+            ← Back
+          </button>
+          <button type="submit" disabled={saving} className="btn-primary">
+            {saving ? "Saving..." : "Save Changes"}
           </button>
         </div>
       </form>

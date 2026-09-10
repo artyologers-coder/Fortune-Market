@@ -552,6 +552,12 @@ export default function AdminPage() {
                       </td>
                       <td className="py-4">
                         <div className="flex gap-1">
+                          <a
+                            href={`/admin/products/${product.id}`}
+                            className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+                          >
+                            Edit
+                          </a>
                           {product.active ? (
                             <button
                               onClick={() => handleRemoveProduct(product.id)}
