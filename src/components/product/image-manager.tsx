@@ -170,18 +170,6 @@ export function ImageManager({
     setOverIndex(null);
   }
 
-  function addLink() {
-    const input = prompt("Enter image URL:");
-    if (!input) return;
-    const urls = input
-      .split(",")
-      .map((u) => u.trim())
-      .filter(Boolean);
-    if (urls.length > 0) {
-      onChange([...images, ...urls].slice(0, maxImages));
-    }
-  }
-
   return (
     <div>
       <div className="flex flex-wrap gap-3">
@@ -264,15 +252,6 @@ export function ImageManager({
                 onChange={(e) => handleUpload(e.target.files)}
               />
             </label>
-
-            <button
-              type="button"
-              onClick={addLink}
-              className="w-24 h-24 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center cursor-pointer hover:border-gray-400 text-gray-400 text-xs transition-colors"
-            >
-              <span className="text-lg leading-none">🔗</span>
-              <span>Link</span>
-            </button>
           </>
         )}
       </div>
