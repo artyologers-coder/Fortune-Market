@@ -3,12 +3,16 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/prisma";
 import { syncProduct } from "@/lib/stock-sync";
+import { featureUnavailable } from "@/lib/feature-guard";
 
 export async function POST(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
+    const unavailable = featureUnavailable("COMMISSION_SYSTEM");
+    if (unavailable) return unavailable;
+
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -49,6 +53,9 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
+    const unavailable = featureUnavailable("COMMISSION_SYSTEM");
+    if (unavailable) return unavailable;
+
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

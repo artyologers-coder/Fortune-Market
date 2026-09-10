@@ -60,11 +60,7 @@ export default function SignupPage() {
         return;
       }
 
-      if (form.phone) {
-        router.push(`/auth/verify-otp?phone=${encodeURIComponent(form.phone)}`);
-      } else {
-        router.push("/auth/login");
-      }
+      router.push("/auth/login");
     } catch {
       setError("Something went wrong");
       setLoading(false);
@@ -126,14 +122,13 @@ export default function SignupPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number <span className="text-gray-400">(optional)</span></label>
               <input
                 type="tel"
                 value={form.phone}
                 onChange={(e) => update("phone", e.target.value)}
                 className="input-field"
                 placeholder="+947XXXXXXXX"
-                required
               />
             </div>
             {buyerEnabled && producerEnabled && (

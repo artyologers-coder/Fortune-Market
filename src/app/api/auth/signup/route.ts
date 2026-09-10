@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { hash } from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { smsProvider } from "@/lib/sms-provider";
 
 export async function POST(req: NextRequest) {
   try {
@@ -33,18 +32,6 @@ export async function POST(req: NextRequest) {
         role: role === "PRODUCER" ? "PRODUCER" : "BUYER",
       },
     });
-
-    if (phone) {
-      const code = Math.floor(100000 + Math.random() * 900000).toString();
-      await prisma.otpCode.create({
-        data: {
-          phone,
-          code,
-          expiresAt: new Date(Date.now() + 10 * 60 * 1000),
-        },
-      });
-      await smsProvider.sendOtp(phone, code);
-    }
 
     return NextResponse.json({
       message: "Account created successfully",

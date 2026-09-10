@@ -20,12 +20,12 @@ interface ScrapedData {
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
-const categories = [
-  { id: "cat-foods", name: "Foods", nameSi: "ආහාර", slug: "foods" },
-  { id: "cat-crafts", name: "Crafts", nameSi: "වෙළඳ භාණ්ඩ", slug: "crafts" },
-  { id: "cat-naturals", name: "Naturals", nameSi: "ස්වාභාවික", slug: "naturals" },
-  { id: "cat-fashion", name: "Fashion", nameSi: "විලාසිතා", slug: "fashion" },
-];
+interface CategoryOption {
+  id: string;
+  name: string;
+  nameSi: string;
+  slug: string;
+}
 
 export default function ProducerListings() {
   return (
@@ -45,6 +45,7 @@ function ProducerListingsContent() {
   const editing = Boolean(editId);
 
   const [tab, setTab] = useState<Tab>("manual");
+  const [categories, setCategories] = useState<CategoryOption[]>([]);
   const [loading, setLoading] = useState(false);
   const [productLoading, setProductLoading] = useState(editing);
   const [success, setSuccess] = useState(false);
@@ -82,6 +83,27 @@ function ProducerListingsContent() {
       router.push("/auth/login");
       return;
     }
+    if (status === "authenticated") {
+      fetch("/api/categories")
+        .then((r) => r.json())
+        .then((data) => {
+          const list = Array.isArray(data.categories) ? data.categories : [];
+          setCategories(
+            list.map((c: CategoryOption) => ({
+              id: c.id,
+              name: c.name,
+              nameSi: c.nameSi || c.name,
+              slug: c.slug,
+            }))
+          );
+        })
+        .catch(() => {
+          // Categories load lazily; the form stays usable once they arrive.
+        });
+    }
+  }, [status, router]);
+
+  useEffect(() => {
     if (status === "authenticated" && editId) {
       fetch(`/api/producer/products?id=${editId}`)
         .then((r) => r.json())
@@ -228,7 +250,7 @@ function ProducerListingsContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           url: importUrl,
-          categoryId: importCategoryId || "cat-foods",
+          categoryId: importCategoryId || categories[0]?.id || "",
           price: importPrice ? parseFloat(importPrice) : undefined,
           stock: importStock ? parseInt(importStock) : undefined,
         }),
@@ -293,6 +315,29 @@ function ProducerListingsContent() {
     return <div className="page-container text-center text-gray-500">Loading product...</div>;
   }
 
+  const pendingApproval = status === "authenticated" && !session.user.verifiedProducer;
+
+  if (pendingApproval) {
+    return (
+      <div className="page-container max-w-3xl mx-auto">
+        <h1 className="text-3xl font-bold text-gray-900 mb-6">
+          {editing ? "Edit Product" : "Add New Product"}
+        </h1>
+        <div className="card p-8 text-center">
+          <div className="text-5xl mb-4">⏳</div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Account awaiting approval</h2>
+          <p className="text-gray-500 mb-4">
+            Your producer profile is pending review by the Fortune Market team.
+            You will be able to list and manage products once your account is approved.
+          </p>
+          <button onClick={() => router.push("/producer/dashboard")} className="btn-primary">
+            ← Back to Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="page-container max-w-3xl mx-auto">
       <h1 className="text-3xl font-bold text-gray-900 mb-6">
@@ -319,17 +364,19 @@ function ProducerListingsContent() {
         >
           Manual Entry
         </button>
-        <button
-          onClick={() => setTab("import")}
-          disabled={editing}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
-            tab === "import"
-              ? "bg-emerald-600 text-white"
-              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-          }`}
-        >
-          Import from URL
-        </button>
+        {isFeatureEnabled("COMMISSION_SYSTEM") && (
+          <button
+            onClick={() => setTab("import")}
+            disabled={editing}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+              tab === "import"
+                ? "bg-emerald-600 text-white"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
+          >
+            Import from URL
+          </button>
+        )}
       </div>
 
       {tab === "manual" && (

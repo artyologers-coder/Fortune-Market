@@ -30,6 +30,14 @@ export async function requireProducer() {
     where: { userId },
   });
   if (!producer) throw new CreativeRouteError(401, "Unauthorized");
+
+  if (producer.verificationStatus !== "APPROVED") {
+    throw new CreativeRouteError(
+      403,
+      "Your producer account is awaiting approval. Fortune Creative will be available once an admin approves your profile."
+    );
+  }
+
   return producer;
 }
 

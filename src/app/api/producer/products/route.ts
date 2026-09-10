@@ -4,6 +4,7 @@ import { Prisma } from "@prisma/client";
 import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/prisma";
 import { uniqueSlug } from "@/lib/slugify";
+import { requireApprovedProducer, producerGuardErrorResponse } from "@/lib/producer-guard";
 
 const ALLOWED_UPDATE_FIELDS = [
   "name",
@@ -66,15 +67,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const producer = await getProducer(session);
-    if (!producer) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-    }
+    const producer = await requireApprovedProducer();
 
     const body = await req.json();
     const {
@@ -94,6 +87,14 @@ export async function POST(req: NextRequest) {
 
     if (!name || !price || !categoryId) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    }
+
+    const category = await prisma.category.findUnique({ where: { id: categoryId } });
+    if (!category) {
+      return NextResponse.json(
+        { error: "Invalid category selected. Please choose a valid category." },
+        { status: 400 }
+      );
     }
 
     const slug = await uniqueSlug(name || nameSi || "product", async (candidate) =>
@@ -122,21 +123,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ product });
   } catch (error) {
     console.error("Product creation error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return producerGuardErrorResponse(error);
   }
 }
 
 export async function PUT(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const producer = await getProducer(session);
-    if (!producer) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-    }
+    const producer = await requireApprovedProducer();
 
     const body = await req.json();
     const { id } = body;
@@ -184,28 +177,13 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ product });
   } catch (error) {
     console.error("Product update error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return producerGuardErrorResponse(error);
   }
 }
 
 export async function DELETE(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const userId = session.user.id;
-    const role = session.user.role;
-
-    if (role !== "PRODUCER") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-    }
-
-    const producer = await prisma.producer.findUnique({ where: { userId } });
-    if (!producer) {
-      return NextResponse.json({ error: "Producer profile not found" }, { status: 404 });
-    }
+    const producer = await requireApprovedProducer();
 
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
@@ -227,6 +205,6 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ message: "Product deactivated" });
   } catch (error) {
     console.error("Product delete error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return producerGuardErrorResponse(error);
   }
 }

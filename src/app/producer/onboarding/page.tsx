@@ -155,22 +155,37 @@ export default function ProducerOnboarding() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">District</label>
-              <select value={form.district} onChange={(e) => update("district", e.target.value)} className="input-field">
+              <select value={form.district} onChange={(e) => update("district", e.target.value)} className="input-field" required>
                 <option value="">Select district</option>
                 {districts.map((d) => <option key={d} value={d}>{d}</option>)}
               </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-              <input type="text" value={form.location} onChange={(e) => update("location", e.target.value)} className="input-field" placeholder="City/Town" />
+              <input type="text" value={form.location} onChange={(e) => update("location", e.target.value)} className="input-field" placeholder="City/Town" required />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Phone <span className="text-gray-400">(optional)</span></label>
               <input type="tel" value={form.phone} onChange={(e) => update("phone", e.target.value)} className="input-field" placeholder="+947XXXXXXXX" />
             </div>
           </div>
           <div className="flex justify-end">
-            <button onClick={() => setStep(2)} className="btn-primary">
+            <button
+              type="button"
+              onClick={() => {
+                const missing =
+                  !form.businessName.trim() ||
+                  !form.businessNameSi.trim() ||
+                  !form.district ||
+                  !form.location.trim();
+                if (missing) {
+                  alert("Please complete Business Name, District, and Location.");
+                  return;
+                }
+                setStep(2);
+              }}
+              className="btn-primary"
+            >
               Next →
             </button>
           </div>

@@ -7,6 +7,7 @@ import { extractWithAI } from "@/lib/ai-scraper";
 import * as cheerio from "cheerio";
 import https from "https";
 import http from "http";
+import { featureUnavailable } from "@/lib/feature-guard";
 
 function extractPageText(html: string): string {
   const $ = cheerio.load(html);
@@ -76,6 +77,9 @@ function fetchUrl(url: string): Promise<string> {
 
 export async function POST(req: NextRequest) {
   try {
+    const unavailable = featureUnavailable("COMMISSION_SYSTEM");
+    if (unavailable) return unavailable;
+
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -177,10 +181,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ scraped });
     }
 
+    if (!categoryId) {
+      return NextResponse.json(
+        { error: "A valid category is required to import a product." },
+        { status: 400 }
+      );
+    }
+    const resolvedCategoryId = categoryId;
+    const category = await prisma.category.findUnique({ where: { id: resolvedCategoryId } });
+    if (!category) {
+      return NextResponse.json(
+        { error: "Invalid category selected. Please choose a valid category." },
+        { status: 400 }
+      );
+    }
+
     const product = await prisma.product.create({
       data: {
         producerId: producer.id,
-        categoryId: categoryId || "cat-foods",
+        categoryId: category.id,
         name: scraped.name,
         nameSi: scraped.name,
         description: scraped.description,
