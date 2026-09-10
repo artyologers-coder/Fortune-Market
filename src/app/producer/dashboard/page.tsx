@@ -158,6 +158,8 @@ export default function ProducerDashboard() {
           <div className="flex items-center gap-2 mt-1">
             {producer?.verificationStatus === "APPROVED" ? (
               <span className="badge-verified">✓ Verified Producer</span>
+            ) : producer === null ? (
+              <span className="badge-pending">Profile not submitted</span>
             ) : (
               <span className="badge-pending">⏳ Pending Verification</span>
             )}
@@ -179,12 +181,37 @@ export default function ProducerDashboard() {
               )}
             </Link>
           )}
-          <Link href="/producer/dashboard/listings" className="btn-primary">
-            + Add Product
-          </Link>
+          {producer === null ? (
+            <Link href="/producer/onboarding" className="btn-primary">
+              Complete Registration
+            </Link>
+          ) : (
+            <Link href="/producer/dashboard/listings" className="btn-primary">
+              + Add Product
+            </Link>
+          )}
         </div>
       </div>
 
+      {producer === null ? (
+        <div className="card p-8 text-center max-w-2xl mx-auto">
+          <div className="text-5xl mb-4">📝</div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Complete your producer registration</h2>
+          <p className="text-gray-500 mb-6">
+            Your account is registered as a Seller, but your business profile is not submitted yet.
+            Finish a few quick steps to appear on Fortune Market and start listing products.
+          </p>
+          <Link href="/producer/onboarding" className="btn-primary inline-block mb-4">
+            Continue Registration
+          </Link>
+          <div>
+            <Link href="/" className="text-sm text-gray-500 hover:text-primary hover:underline">
+              Browse Marketplace instead
+            </Link>
+          </div>
+        </div>
+      ) : (
+        <>
       <div className="flex gap-2 mb-6 border-b border-gray-200">
         {(["listings", "orders", "offers"] as const).map((tab) => (
           <button
@@ -319,6 +346,8 @@ export default function ProducerDashboard() {
             Create New Offer
           </Link>
         </div>
+      )}
+      </>
       )}
     </div>
   );

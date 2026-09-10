@@ -46,6 +46,7 @@ function ProducerListingsContent() {
 
   const [tab, setTab] = useState<Tab>("manual");
   const [categories, setCategories] = useState<CategoryOption[]>([]);
+  const [profileStatus, setProfileStatus] = useState<string | null | undefined>(undefined);
   const [loading, setLoading] = useState(false);
   const [productLoading, setProductLoading] = useState(editing);
   const [success, setSuccess] = useState(false);
@@ -84,22 +85,21 @@ function ProducerListingsContent() {
       return;
     }
     if (status === "authenticated") {
-      fetch("/api/categories")
-        .then((r) => r.json())
-        .then((data) => {
-          const list = Array.isArray(data.categories) ? data.categories : [];
-          setCategories(
-            list.map((c: CategoryOption) => ({
-              id: c.id,
-              name: c.name,
-              nameSi: c.nameSi || c.name,
-              slug: c.slug,
-            }))
-          );
-        })
-        .catch(() => {
-          // Categories load lazily; the form stays usable once they arrive.
-        });
+      Promise.all([
+        fetch("/api/categories").then((r) => r.json()).catch(() => ({ categories: [] })),
+        fetch("/api/producer/profile").then((r) => r.json()).catch(() => ({ producer: null })),
+      ]).then(([catData, profileData]) => {
+        const list = Array.isArray(catData.categories) ? catData.categories : [];
+        setCategories(
+          list.map((c: CategoryOption) => ({
+            id: c.id,
+            name: c.name,
+            nameSi: c.nameSi || c.name,
+            slug: c.slug,
+          }))
+        );
+        setProfileStatus(profileData.producer?.verificationStatus ?? null);
+      });
     }
   }, [status, router]);
 
@@ -315,9 +315,40 @@ function ProducerListingsContent() {
     return <div className="page-container text-center text-gray-500">Loading product...</div>;
   }
 
-  const pendingApproval = status === "authenticated" && !session.user.verifiedProducer;
+  const approved =
+    profileStatus === null
+      ? false
+      : profileStatus === undefined
+      ? status === "authenticated" && Boolean(session.user.verifiedProducer)
+      : profileStatus === "APPROVED";
 
-  if (pendingApproval) {
+  if (status === "authenticated" && !approved) {
+    if (profileStatus === null) {
+      return (
+        <div className="page-container max-w-3xl mx-auto">
+          <h1 className="text-3xl font-bold text-gray-900 mb-6">
+            {editing ? "Edit Product" : "Add New Product"}
+          </h1>
+          <div className="card p-8 text-center">
+            <div className="text-5xl mb-4">📝</div>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Finish signing up as a Seller</h2>
+            <p className="text-gray-500 mb-4">
+              Your account is registered as a Seller, but your business profile has not been
+              submitted yet. Complete your registration before listing products.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <button onClick={() => router.push("/producer/onboarding")} className="btn-primary">
+                Continue Registration
+              </button>
+              <button onClick={() => router.push("/producer/dashboard")} className="btn-ghost">
+                ← Back to Dashboard
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="page-container max-w-3xl mx-auto">
         <h1 className="text-3xl font-bold text-gray-900 mb-6">
