@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { Prisma } from "@prisma/client";
 import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/prisma";
+import { uniqueSlug } from "@/lib/slugify";
 
 const ALLOWED_UPDATE_FIELDS = [
   "name",
@@ -17,6 +18,7 @@ const ALLOWED_UPDATE_FIELDS = [
   "stock",
   "active",
   "images",
+  "brandLogoUrl",
 ] as const;
 
 async function getProducer(session: { user: { id?: string | null } }) {
@@ -87,11 +89,16 @@ export async function POST(req: NextRequest) {
       unitSi,
       stock,
       images,
+      brandLogoUrl,
     } = body;
 
     if (!name || !price || !categoryId) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
+
+    const slug = await uniqueSlug(name || nameSi || "product", async (candidate) =>
+      Boolean(await prisma.product.findUnique({ where: { slug: candidate } }))
+    );
 
     const product = await prisma.product.create({
       data: {
@@ -107,6 +114,8 @@ export async function POST(req: NextRequest) {
         unitSi: unitSi || "කැබැල්ල",
         stock: parseInt(stock) || 0,
         images: JSON.stringify(Array.isArray(images) ? images : []),
+        slug,
+        brandLogoUrl: brandLogoUrl || null,
       },
     });
 
@@ -158,6 +167,9 @@ export async function PUT(req: NextRequest) {
           break;
         case "images":
           data.images = JSON.stringify(Array.isArray(value) ? value : []);
+          break;
+        case "brandLogoUrl":
+          data.brandLogoUrl = value ? String(value) : null;
           break;
         default:
           (data as Record<string, unknown>)[field] = value;

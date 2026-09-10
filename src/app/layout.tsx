@@ -7,6 +7,9 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Fortune Market",
   description: "Sri Lankan online marketplace connecting home-based producers with buyers",
+  metadataBase: new URL(
+    process.env.NEXTAUTH_URL ?? "https://fortune-market-drab.vercel.app"
+  ),
 };
 
 export default function RootLayout({

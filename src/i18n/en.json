@@ -202,5 +202,20 @@
     "terms": "Terms & Conditions",
     "privacy": "Privacy Policy",
     "copyright": "© 2024 Fortune Market. All rights reserved."
+  },
+  "chat": {
+    "title": "Messages",
+    "inbox": "Inbox",
+    "noConversations": "No conversations yet",
+    "selectConversation": "Select a conversation to start messaging",
+    "typeMessage": "Type a message...",
+    "send": "Send",
+    "askSeller": "Ask Seller",
+    "chatWithSeller": "Chat with Seller",
+    "you": "You",
+    "about": "About",
+    "order": "Order",
+    "noMessagesYet": "No messages yet. Say hello!",
+    "chatWith": "Chat about"
   }
 }

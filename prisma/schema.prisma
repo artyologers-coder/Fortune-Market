@@ -19,10 +19,13 @@ model User {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  producer      Producer?
-  orders        Order[]
-  reviews       Review[]
-  reports       Report[]
+  producer           Producer?
+  orders             Order[]
+  reviews            Review[]
+  reports            Report[]
+  buyerConversations Conversation[] @relation("ConversationBuyer")
+  adminConversations Conversation[] @relation("ConversationAdmin")
+  sentMessages       Message[]      @relation("SentMessages")
 }
 
 model OtpCode {
@@ -54,6 +57,7 @@ model Producer {
 
   products           Product[]
   offers             Offer[]
+  conversations      Conversation[]
 }
 
 model Category {
@@ -96,6 +100,8 @@ model Product {
   syncStatus    String?  @default("paused")
   externalPrice Float?
   externalStock String?
+  slug          String?  @unique
+  brandLogoUrl  String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -104,6 +110,30 @@ model Product {
   reports       Report[]
   syncLogs      StockSyncLog[]
   resellerSource ResellerSource?
+  conversations Conversation[]
+  creative      ProductCreative?
+}
+
+model ProductCreative {
+  id         String   @id @default(cuid())
+  productId  String   @unique
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  imageUrl   String
+  status     String   @default("PENDING") // PENDING, ACTIVE
+  version    Int      @default(1)
+  createdAt  DateTime @default(now())
+  approvedAt DateTime?
+  updatedAt  DateTime @updatedAt
+
+  shares     CreativeShare[]
+}
+
+model CreativeShare {
+  id         String          @id @default(cuid())
+  creativeId String
+  creative   ProductCreative @relation(fields: [creativeId], references: [id], onDelete: Cascade)
+  channel    String // facebook, whatsapp, copy
+  createdAt  DateTime        @default(now())
 }
 
 model StockSyncLog {
@@ -168,6 +198,7 @@ model Order {
   updatedAt              DateTime @updatedAt
 
   items                  OrderItem[]
+  conversations          Conversation[]
 }
 
 model OrderItem {
@@ -218,4 +249,39 @@ model Report {
   reason    String
   resolved  Boolean  @default(false)
   createdAt DateTime @default(now())
+}
+
+model Conversation {
+  id         String    @id @default(cuid())
+  buyerId    String?
+  adminId    String?
+  producerId String
+  productId  String?
+  orderId    String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  buyer      User?     @relation("ConversationBuyer", fields: [buyerId], references: [id], onDelete: Cascade)
+  admin      User?     @relation("ConversationAdmin", fields: [adminId], references: [id], onDelete: Cascade)
+  producer   Producer  @relation(fields: [producerId], references: [id], onDelete: Cascade)
+  product    Product?  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  order      Order?    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  messages   Message[]
+
+  @@index([buyerId])
+  @@index([adminId])
+  @@index([producerId])
+  @@index([updatedAt])
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String
+  senderId       String
+  body           String
+  readAt         DateTime?
+  createdAt      DateTime @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User     @relation("SentMessages", fields: [senderId], references: [id])
+
+  @@index([conversationId, createdAt])
 }

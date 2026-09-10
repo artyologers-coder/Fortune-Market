@@ -14,6 +14,10 @@ interface OrderItem {
     name: string;
     nameSi: string;
     images: string[];
+    producer: {
+      id: string;
+      user: { name: string };
+    };
     resellerSource?: {
       sourceUrl: string;
       sourceDomain: string;
@@ -55,6 +59,19 @@ const STATUS_LABELS: Record<string, string> = {
   CANCELLED: "Cancelled",
   FORWARDED_TO_SUPPLIER: "Forwarded to Supplier",
 };
+
+function uniqueProducers(order: Order) {
+  const seen = new Set<string>();
+  const producers: { id: string; user: { name: string } }[] = [];
+  for (const item of order.items) {
+    const producer = item.product.producer;
+    if (producer && !seen.has(producer.id)) {
+      seen.add(producer.id);
+      producers.push(producer);
+    }
+  }
+  return producers;
+}
 
 export default function OrdersPage() {
   const { data: session, status } = useSession();
@@ -134,6 +151,21 @@ export default function OrdersPage() {
                   </div>
                 ))}
               </div>
+
+              {isFeatureEnabled("INTERNAL_CHAT") &&
+                  uniqueProducers(order).map((producer) => (
+                    <div key={producer.id} className="border-t pt-3 mt-4">
+                      <p className="text-xs text-gray-500 mb-2">
+                        Chat with {producer.user.name}
+                      </p>
+                      <button
+                        onClick={() => router.push(`/chat?order=${order.id}&producer=${producer.id}`)}
+                        className="text-xs px-3 py-1.5 bg-primary text-white rounded hover:bg-primary-600 transition-colors"
+                      >
+                        💬 Chat with Seller
+                      </button>
+                    </div>
+                  ))}
 
               {isFeatureEnabled("COMMISSION_SYSTEM") && order.items.some((item) => item.product.resellerSource) && (
                 <div className="border-t pt-4 mt-4 space-y-3">

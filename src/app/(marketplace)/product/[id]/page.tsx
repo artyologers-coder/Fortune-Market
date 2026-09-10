@@ -4,16 +4,49 @@ import Link from "next/link";
 import { ProductDetail } from "@/components/product/product-detail";
 import { ReviewSection } from "@/components/product/review-section";
 import { ProductImage } from "@/components/product/product-image";
+import { getFirstImage } from "@/lib/product-images";
 import type { Metadata } from "next";
 
 interface Props {
   params: { id: string };
 }
 
+const BASE_URL =
+  process.env.NEXTAUTH_URL ?? "https://fortune-market-drab.vercel.app";
+
+function findProduct(key: string) {
+  return prisma.product.findFirst({
+    where: { OR: [{ id: key }, { slug: key }] },
+  });
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
-    const product = await prisma.product.findUnique({ where: { id: params.id } });
-    return { title: product ? `${product.name} | Fortune Market` : "Product" };
+    const product = await findProduct(params.id);
+    if (!product) return { title: "Product" };
+
+    const creative = await prisma.productCreative.findUnique({
+      where: { productId: product.id },
+    });
+    const ogImage =
+      creative?.status === "ACTIVE"
+        ? creative.imageUrl
+        : (getFirstImage(product.images) ?? undefined);
+    const url = `${BASE_URL}/product/${product.slug ?? product.id}`;
+
+    return {
+      title: `${product.name} | Fortune Market`,
+      description: product.description.slice(0, 160),
+      alternates: { canonical: url },
+      openGraph: {
+        title: `${product.name} | Fortune Market`,
+        description: product.description.slice(0, 160),
+        url,
+        siteName: "Fortune Market",
+        type: "website",
+        images: ogImage ? [ogImage] : [],
+      },
+    };
   } catch {
     return { title: "Product" };
   }
@@ -22,8 +55,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ProductPage({ params }: Props) {
   let product;
   try {
-    product = await prisma.product.findUnique({
-      where: { id: params.id },
+    product = await prisma.product.findFirst({
+      where: { OR: [{ id: params.id }, { slug: params.id }] },
       include: {
         producer: { include: { user: { select: { name: true } } } },
         category: { select: { name: true, nameSi: true, slug: true } },

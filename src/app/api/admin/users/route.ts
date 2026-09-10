@@ -24,7 +24,7 @@ export async function GET() {
         phoneVerified: true,
         role: true,
         createdAt: true,
-        producer: { select: { verificationStatus: true } },
+        producer: { select: { id: true, verificationStatus: true } },
       },
       orderBy: { createdAt: "desc" },
     });

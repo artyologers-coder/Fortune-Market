@@ -25,11 +25,8 @@ export function ReviewSection({ productId }: ReviewSectionProps) {
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  if (!isFeatureEnabled("REVIEWS")) {
-    return null;
-  }
-
   useEffect(() => {
+    if (!isFeatureEnabled("REVIEWS")) return;
     fetch(`/api/reviews?productId=${productId}`)
       .then((res) => res.json())
       .then((data) => {

@@ -12,6 +12,7 @@ export const featureFlags = {
   DELIVERY_SYSTEM: false,
   SELLER_SUBSCRIPTIONS: false,
   ADVERTISING: false,
+  FORTUNE_CREATIVE: false,
 } as const;
 
 export type FeatureFlag = keyof typeof featureFlags;

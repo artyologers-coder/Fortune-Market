@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useCartCount } from "@/lib/cart-context";
 import { Logo } from "@/components/ui/logo";
 import { isFeatureEnabled } from "@/lib/feature-flags";
@@ -11,8 +11,22 @@ export function Header() {
   const { data: session } = useSession();
   const [mobileOpen, setMobileOpen] = useState(false);
   const cartCount = useCartCount();
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const role = session?.user?.role;
+
+  useEffect(() => {
+    if (!session || !isFeatureEnabled("INTERNAL_CHAT")) return;
+    const fetchUnread = () => {
+      fetch("/api/chat/unread-count")
+        .then((r) => r.json())
+        .then((d) => setUnreadCount(d.count || 0))
+        .catch(() => {});
+    };
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 15000);
+    return () => clearInterval(interval);
+  }, [session]);
 
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
@@ -46,6 +60,16 @@ export function Header() {
             {isFeatureEnabled("ORDER_HISTORY") && session && (
               <Link href="/orders" className="text-gray-600 hover:text-primary text-sm">
                 Orders
+              </Link>
+            )}
+            {isFeatureEnabled("INTERNAL_CHAT") && session && (
+              <Link href="/chat" className="text-gray-600 hover:text-primary text-sm relative">
+                Messages
+                {unreadCount > 0 && (
+                  <span className="absolute -top-2 -right-5 bg-primary text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                )}
               </Link>
             )}
             {isFeatureEnabled("PRODUCER_ACCOUNTS") && role === "PRODUCER" && (
@@ -111,6 +135,16 @@ export function Header() {
               )}
               {isFeatureEnabled("ORDER_HISTORY") && session && (
                 <Link href="/orders" className="text-gray-600 hover:text-primary text-sm" onClick={() => setMobileOpen(false)}>Orders</Link>
+              )}
+              {isFeatureEnabled("INTERNAL_CHAT") && session && (
+                <Link href="/chat" className="text-gray-600 hover:text-primary text-sm relative" onClick={() => setMobileOpen(false)}>
+                  Messages
+                  {unreadCount > 0 && (
+                    <span className="ml-2 bg-primary text-white text-[10px] font-bold w-5 h-5 rounded-full inline-flex items-center justify-center">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  )}
+                </Link>
               )}
               {isFeatureEnabled("PRODUCER_ACCOUNTS") && role === "PRODUCER" && (
                 <Link href="/producer/dashboard" className="text-gray-600 hover:text-primary text-sm" onClick={() => setMobileOpen(false)}>Dashboard</Link>

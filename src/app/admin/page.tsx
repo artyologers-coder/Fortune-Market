@@ -87,7 +87,7 @@ interface AdminUser {
   phoneVerified: boolean;
   role: string;
   createdAt: string;
-  producer: { verificationStatus: string } | null;
+  producer: { id: string; verificationStatus: string } | null;
 }
 
 interface ResetModalData {
@@ -374,6 +374,12 @@ export default function AdminPage() {
                     <p className="text-xs text-gray-400">{producer.user.email}</p>
                   </div>
                   <div className="flex gap-2">
+                    <button
+                      onClick={() => router.push(`/chat?producer=${producer.id}`)}
+                      className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700"
+                    >
+                      Message
+                    </button>
                     <button
                       onClick={() => handleProducerAction(producer.id, "approve")}
                       className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700"
@@ -668,13 +674,29 @@ export default function AdminPage() {
                     </td>
                     <td className="py-4 text-sm text-gray-500">{new Date(user.createdAt).toLocaleDateString("en-LK")}</td>
                     <td className="py-4">
-                      <button
-                        onClick={() => handleResetPassword(user)}
-                        disabled={resettingUserId === user.id}
-                        className="text-xs px-3 py-1.5 bg-primary text-white rounded hover:bg-primary-dark disabled:opacity-40 transition-colors"
-                      >
-                        {resettingUserId === user.id ? "Resetting..." : "Reset Password"}
-                      </button>
+                      <div className="flex gap-2">
+                        {user.role === "PRODUCER" && (
+                          <button
+                            onClick={() =>
+                              router.push(
+                                user.producer
+                                  ? `/chat?producer=${user.producer.id}`
+                                  : `/chat?producerUser=${user.id}`
+                              )
+                            }
+                            className="text-xs px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                          >
+                            Message
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleResetPassword(user)}
+                          disabled={resettingUserId === user.id}
+                          className="text-xs px-3 py-1.5 bg-primary text-white rounded hover:bg-primary-dark disabled:opacity-40 transition-colors"
+                        >
+                          {resettingUserId === user.id ? "Resetting..." : "Reset Password"}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

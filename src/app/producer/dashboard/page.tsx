@@ -43,21 +43,13 @@ export default function ProducerDashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  if (!isFeatureEnabled("PRODUCER_ACCOUNTS")) {
-    return (
-      <div className="page-container text-center py-20">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Coming Soon</h2>
-        <p className="text-gray-500">Producer dashboard is not yet available.</p>
-      </div>
-    );
-  }
-
   const [producer, setProducer] = useState<Producer | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"listings" | "orders" | "offers">("listings");
   const [syncing, setSyncing] = useState<string | null>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -75,14 +67,25 @@ export default function ProducerDashboard() {
         fetch("/api/producer/profile").then((r) => r.json()).catch(() => ({ producer: null })),
         fetch("/api/producer/products/list").then((r) => r.json()).catch(() => ({ products: [] })),
         fetch("/api/orders").then((r) => r.json()).catch(() => ({ orders: [] })),
-      ]).then(([profileData, productsData, ordersData]) => {
+        fetch("/api/chat/unread-count").then((r) => r.json()).catch(() => ({ count: 0 })),
+      ]).then(([profileData, productsData, ordersData, unreadData]) => {
         setProducer(profileData.producer);
         setProducts(productsData.products || []);
         setOrders(ordersData.orders || []);
+        setUnreadCount(unreadData.count || 0);
         setLoading(false);
       });
     }
   }, [session, status, router]);
+
+  if (!isFeatureEnabled("PRODUCER_ACCOUNTS")) {
+    return (
+      <div className="page-container text-center py-20">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Coming Soon</h2>
+        <p className="text-gray-500">Producer dashboard is not yet available.</p>
+      </div>
+    );
+  }
 
   if (loading) {
     return <div className="page-container text-center text-gray-500">Loading...</div>;
@@ -165,9 +168,21 @@ export default function ProducerDashboard() {
             )}
           </div>
         </div>
-        <Link href="/producer/dashboard/listings" className="btn-primary">
-          + Add Product
-        </Link>
+        <div className="flex items-center gap-3">
+          {isFeatureEnabled("INTERNAL_CHAT") && (
+            <Link href="/chat" className="btn-outline relative">
+              Messages
+              {unreadCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-primary text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
+            </Link>
+          )}
+          <Link href="/producer/dashboard/listings" className="btn-primary">
+            + Add Product
+          </Link>
+        </div>
       </div>
 
       <div className="flex gap-2 mb-6 border-b border-gray-200">

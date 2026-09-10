@@ -16,15 +16,6 @@ export default function ProducerOnboarding() {
   const { data: session } = useSession();
   const router = useRouter();
 
-  if (!isFeatureEnabled("PRODUCER_ACCOUNTS")) {
-    return (
-      <div className="page-container text-center py-20">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Coming Soon</h2>
-        <p className="text-gray-500">Producer registration is not yet available.</p>
-      </div>
-    );
-  }
-
   const [step, setStep] = useState(1);
   const [categories, setCategories] = useState<Category[]>([]);
   const [submitted, setSubmitted] = useState(false);
@@ -61,6 +52,15 @@ export default function ProducerOnboarding() {
       }))
     );
   }, []);
+
+  if (!isFeatureEnabled("PRODUCER_ACCOUNTS")) {
+    return (
+      <div className="page-container text-center py-20">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Coming Soon</h2>
+        <p className="text-gray-500">Producer registration is not yet available.</p>
+      </div>
+    );
+  }
 
   function update(field: string, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
