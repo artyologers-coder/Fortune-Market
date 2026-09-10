@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import { CreativeDialog } from "@/components/producer/creative-dialog";
+import { ImageManager } from "@/components/product/image-manager";
 
 type Tab = "manual" | "import";
 
@@ -17,8 +18,6 @@ interface ScrapedData {
   availability: "in_stock" | "out_of_stock" | "unknown";
   siteName: string;
 }
-
-const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
 interface CategoryOption {
   id: string;
@@ -50,11 +49,6 @@ function ProducerListingsContent() {
   const [loading, setLoading] = useState(false);
   const [productLoading, setProductLoading] = useState(editing);
   const [success, setSuccess] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState("");
-  const [logoUploading, setLogoUploading] = useState(false);
-  const [logoUploadError, setLogoUploadError] = useState("");
-
   const [importUrl, setImportUrl] = useState("");
   const [importing, setImporting] = useState(false);
   const [scraped, setScraped] = useState<ScrapedData | null>(null);
@@ -76,7 +70,6 @@ function ProducerListingsContent() {
     stock: "",
     active: true,
     images: [] as string[],
-    brandLogoUrl: "",
   });
 
   useEffect(() => {
@@ -129,7 +122,6 @@ function ProducerListingsContent() {
               stock: p.stock != null ? String(p.stock) : "",
               active: p.active !== false,
               images,
-              brandLogoUrl: p.brandLogoUrl || "",
             });
             setTab("manual");
           } else {
@@ -152,64 +144,6 @@ function ProducerListingsContent() {
 
   function update(field: string, value: string | boolean) {
     setForm((prev) => ({ ...prev, [field]: value }));
-  }
-
-  async function handleUpload(file: File) {
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      setUploadError("Only JPG, PNG, WebP, or GIF images are allowed");
-      return;
-    }
-    if (file.size > 3 * 1024 * 1024) {
-      setUploadError("Image must be under 3 MB");
-      return;
-    }
-    setUploading(true);
-    setUploadError("");
-    try {
-      const fd = new FormData();
-      fd.append("file", file);
-      const res = await fetch("/api/producer/upload", { method: "POST", body: fd });
-      const data = await res.json();
-      if (res.ok) {
-        setForm((prev) => ({ ...prev, images: [...prev.images, data.url] }));
-      } else {
-        setUploadError(data.error || "Upload failed");
-      }
-    } catch {
-      setUploadError("Upload failed");
-    }
-    setUploading(false);
-  }
-
-  function handleRemoveImage(url: string) {
-    setForm((prev) => ({ ...prev, images: prev.images.filter((i) => i !== url) }));
-  }
-
-  async function handleBrandLogoUpload(file: File) {
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      setLogoUploadError("Only JPG, PNG, WebP, or GIF logos are allowed");
-      return;
-    }
-    if (file.size > 3 * 1024 * 1024) {
-      setLogoUploadError("Logo must be under 3 MB");
-      return;
-    }
-    setLogoUploading(true);
-    setLogoUploadError("");
-    try {
-      const fd = new FormData();
-      fd.append("file", file);
-      const res = await fetch("/api/producer/upload", { method: "POST", body: fd });
-      const data = await res.json();
-      if (res.ok) {
-        setForm((prev) => ({ ...prev, brandLogoUrl: data.url }));
-      } else {
-        setLogoUploadError(data.error || "Upload failed");
-      }
-    } catch {
-      setLogoUploadError("Upload failed");
-    }
-    setLogoUploading(false);
   }
 
   async function handlePreview() {
@@ -294,7 +228,7 @@ function ProducerListingsContent() {
           setForm({
             name: "", nameSi: "", description: "", descriptionSi: "",
             categoryId: "", price: "", originalPrice: "", unit: "piece",
-            unitSi: "කැබැල්ල", stock: "", active: true, images: [], brandLogoUrl: "",
+            unitSi: "කැබැල්ල", stock: "", active: true, images: [],
           });
         } else {
           router.push("/producer/dashboard");
@@ -461,72 +395,11 @@ function ProducerListingsContent() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Images</label>
-            <div className="flex flex-wrap gap-3">
-              {form.images.map((url) => (
-                <div key={url} className="relative w-24 h-24 rounded-lg overflow-hidden border border-gray-200">
-                  <img src={url} alt="Product preview" className="w-full h-full object-cover" />
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveImage(url)}
-                    className="absolute top-1 right-1 w-6 h-6 bg-red-600 text-white text-xs rounded-full hover:bg-red-700"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-              <label className="w-24 h-24 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-gray-400 text-gray-400 text-sm">
-                {uploading ? "..." : "+ Add"}
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) handleUpload(file);
-                    e.target.value = "";
-                  }}
-                />
-              </label>
-            </div>
-            {uploadError && <p className="text-xs text-red-600 mt-1">{uploadError}</p>}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Brand Logo <span className="text-gray-400">(optional — used on your Fortune Creative)</span>
-            </label>
-            <div className="flex flex-wrap gap-3 items-center">
-              {form.brandLogoUrl ? (
-                <div className="relative w-24 h-24 rounded-lg overflow-hidden border border-gray-200 bg-white">
-                  <img src={form.brandLogoUrl} alt="Brand logo preview" className="w-full h-full object-contain" />
-                  <button
-                    type="button"
-                    onClick={() => setForm((prev) => ({ ...prev, brandLogoUrl: "" }))}
-                    className="absolute top-1 right-1 w-6 h-6 bg-red-600 text-white text-xs rounded-full hover:bg-red-700"
-                  >
-                    ×
-                  </button>
-                </div>
-              ) : (
-                <label className="w-24 h-24 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-gray-400 text-gray-400 text-sm">
-                  {logoUploading ? "..." : "+ Upload"}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) handleBrandLogoUpload(file);
-                      e.target.value = "";
-                    }}
-                  />
-                </label>
-              )}
-              <p className="text-xs text-gray-400 max-w-[16rem]">
-                Your product&apos;s official brand logo. It will be placed on your creative alongside the Fortune Market logo.
-              </p>
-            </div>
-            {logoUploadError && <p className="text-xs text-red-600 mt-1">{logoUploadError}</p>}
+            <ImageManager
+              images={form.images}
+              onChange={(images) => setForm((prev) => ({ ...prev, images }))}
+              productId={editId || undefined}
+            />
           </div>
 
           <div className="flex items-center gap-2">
