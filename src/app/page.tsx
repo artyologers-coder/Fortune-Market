@@ -27,13 +27,13 @@ export default function HomePage() {
       </section>
 
       <section className="page-container">
-        <h2 className="section-title">{dict.common.verified} {dict.categories.title}</h2>
-        <FeaturedProducers />
+        <h2 className="section-title">{dict.product.title}s</h2>
+        <FeaturedProducts />
       </section>
 
       <section className="page-container">
-        <h2 className="section-title">{dict.product.title}s</h2>
-        <FeaturedProducts />
+        <h2 className="section-title">{dict.common.verified} {dict.categories.title}</h2>
+        <FeaturedProducers />
       </section>
     </div>
   );
