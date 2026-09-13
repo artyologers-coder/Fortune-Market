@@ -223,6 +223,24 @@ Clean premium wellness environment / natural materials / sophisticated commercia
 The system should adapt the visual concept to the actual product.
 
 --------------------------------------------------
+FASHION MODEL PRESERVATION
+--------------------------------------------------
+
+Applicable ONLY to FASHION items.
+
+If the supplied product photograph already includes a model (person) wearing the product:
+
+- Preserve the model exactly as captured.
+- Do NOT change or replace the model — no alterations to their face, skin tone, hair, body, pose, or identity.
+
+If the supplied product photograph does NOT include a model:
+
+- Add a suitable Sri Lankan model whose appearance, skin tone, and styling match the fashion product being advertised.
+- The model must feel authentic and appropriate for Sri Lanka's market.
+
+For all non-fashion categories, ignore this rule — never insert, change, or replace people unless they were already present in the original photograph.
+
+--------------------------------------------------
 COMPOSITION
 --------------------------------------------------
 
@@ -274,6 +292,19 @@ FORTUNE MARKET WEB URL
 Position "fortunemarket.lk" web url in bottom right corner.
 
 Never distort text or miss spelled.
+
+"Do not add any other text in the post. Only this." The "fortunemarket.lk" web URL is the ONLY visible text in the final image.
+
+--------------------------------------------------
+COPYRIGHT MARK
+--------------------------------------------------
+
+Embed a subtle, practically non-visible copyright trace "@FortuneMarket" within the image.
+
+- It must NOT appear as visible letters, words, or typography in the final image.
+- It should be an imperceptible / barely-detectable mark, noticed only on close forensic inspection.
+- It must not disturb the composition, lighting, product, or background.
+- This trace is not a text element; it must never read as readable characters.
 
 --------------------------------------------------
 NO PRICE / NO TEMPORARY INFORMATION
