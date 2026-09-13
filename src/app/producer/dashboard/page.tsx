@@ -39,6 +39,12 @@ interface Order {
   items: { product: { nameSi: string }; quantity: number; price: number }[];
 }
 
+interface SalesSummary {
+  unitsSold: number;
+  orderCount: number;
+  revenue: number;
+}
+
 export default function ProducerDashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -46,6 +52,7 @@ export default function ProducerDashboard() {
   const [producer, setProducer] = useState<Producer | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [sales, setSales] = useState<SalesSummary>({ unitsSold: 0, orderCount: 0, revenue: 0 });
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"listings" | "orders" | "offers">("listings");
   const [syncing, setSyncing] = useState<string | null>(null);
@@ -68,11 +75,13 @@ export default function ProducerDashboard() {
         fetch("/api/producer/products/list").then((r) => r.json()).catch(() => ({ products: [] })),
         fetch("/api/orders").then((r) => r.json()).catch(() => ({ orders: [] })),
         fetch("/api/chat/unread-count").then((r) => r.json()).catch(() => ({ count: 0 })),
-      ]).then(([profileData, productsData, ordersData, unreadData]) => {
+        fetch("/api/producer/sales").then((r) => r.json()).catch(() => ({ unitsSold: 0, orderCount: 0, revenue: 0 })),
+      ]).then(([profileData, productsData, ordersData, unreadData, salesData]) => {
         setProducer(profileData.producer);
         setProducts(productsData.products || []);
         setOrders(ordersData.orders || []);
         setUnreadCount(unreadData.count || 0);
+        setSales({ unitsSold: salesData.unitsSold, orderCount: salesData.orderCount, revenue: salesData.revenue });
         setLoading(false);
       });
     }
@@ -212,6 +221,21 @@ export default function ProducerDashboard() {
         </div>
       ) : (
         <>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div className="card p-5">
+          <p className="text-xs text-gray-500 mb-1">Units Sold</p>
+          <p className="text-2xl font-bold text-gray-900">{sales.unitsSold}</p>
+        </div>
+        <div className="card p-5">
+          <p className="text-xs text-gray-500 mb-1">Orders</p>
+          <p className="text-2xl font-bold text-gray-900">{sales.orderCount}</p>
+        </div>
+        <div className="card p-5">
+          <p className="text-xs text-gray-500 mb-1">Revenue</p>
+          <p className="text-2xl font-bold text-primary">Rs. {sales.revenue.toLocaleString()}</p>
+        </div>
+      </div>
+
       <div className="flex gap-2 mb-6 border-b border-gray-200">
         {(["listings", "orders", "offers"] as const).map((tab) => (
           <button
