@@ -43,13 +43,7 @@ function buildProductUrl(
   origin: string
 ): string {
   const key = product.slug ?? product.id;
-  const utm = new URLSearchParams({
-    utm_source: "producer_share",
-    utm_medium: "social",
-    utm_campaign: "fortune_creative",
-    utm_content: key,
-  });
-  return `${origin}/product/${key}?${utm.toString()}`;
+  return `${origin}/product/${key}`;
 }
 
 function defaultCaption(
