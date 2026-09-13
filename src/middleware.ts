@@ -13,7 +13,7 @@ export default withAuth({
         return token?.role === "ADMIN";
       }
 
-      if (path === "/cart" || path === "/checkout" || path === "/orders" || path === "/chat") {
+      if (path === "/cart" || path === "/checkout" || path === "/orders" || path === "/chat" || path === "/account") {
         return !!token;
       }
 
@@ -23,5 +23,5 @@ export default withAuth({
 });
 
 export const config = {
-  matcher: ["/producer/:path*", "/admin/:path*", "/cart", "/checkout", "/orders", "/chat"],
+  matcher: ["/producer/:path*", "/admin/:path*", "/cart", "/checkout", "/orders", "/chat", "/account"],
 };

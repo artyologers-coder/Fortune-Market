@@ -48,16 +48,77 @@ export async function PUT(req: NextRequest) {
     }
 
     const body = await req.json();
+    const data: {
+      businessName?: string;
+      businessNameSi?: string;
+      description?: string | null;
+      descriptionSi?: string | null;
+      location?: string;
+      district?: string;
+      phone?: string;
+    } = {};
+
+    if (body.businessName !== undefined) {
+      const businessName = String(body.businessName).trim();
+      if (!businessName || businessName.length < 2) {
+        return NextResponse.json(
+          { error: "Business name is required" },
+          { status: 400 }
+        );
+      }
+      data.businessName = businessName;
+    }
+
+    if (body.businessNameSi !== undefined) {
+      const businessNameSi = String(body.businessNameSi).trim();
+      data.businessNameSi =
+        businessNameSi || (body.businessName !== undefined ? String(body.businessName).trim() : undefined);
+    }
+
+    if (body.description !== undefined) {
+      data.description = String(body.description).trim() || null;
+    }
+
+    if (body.descriptionSi !== undefined) {
+      data.descriptionSi = String(body.descriptionSi).trim() || null;
+    }
+
+    if (body.location !== undefined) {
+      const location = String(body.location).trim();
+      if (!location) {
+        return NextResponse.json({ error: "Location is required" }, { status: 400 });
+      }
+      data.location = location;
+    }
+
+    if (body.district !== undefined) {
+      const district = String(body.district).trim();
+      if (!district) {
+        return NextResponse.json({ error: "District is required" }, { status: 400 });
+      }
+      data.district = district;
+    }
+
+    if (body.phone !== undefined) {
+      const phone = String(body.phone).trim();
+      if (!phone) {
+        return NextResponse.json(
+          { error: "Please enter a valid phone number" },
+          { status: 400 }
+        );
+      }
+      if (!/^\+?\d{9,15}$/.test(phone.replace(/[\s-]/g, ""))) {
+        return NextResponse.json(
+          { error: "Please enter a valid phone number" },
+          { status: 400 }
+        );
+      }
+      data.phone = phone;
+    }
+
     const updated = await prisma.producer.update({
       where: { id: producer.id },
-      data: {
-        businessName: body.businessName,
-        businessNameSi: body.businessNameSi,
-        description: body.description,
-        descriptionSi: body.descriptionSi,
-        location: body.location,
-        district: body.district,
-      },
+      data,
     });
 
     return NextResponse.json({ producer: updated });

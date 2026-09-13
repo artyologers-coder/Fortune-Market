@@ -87,7 +87,9 @@ export function Header() {
           <div className="hidden md:flex items-center gap-3">
             {session ? (
               <div className="flex items-center gap-3">
-                <span className="text-sm text-gray-600">{session.user?.name}</span>
+                <Link href="/account" className="text-sm text-gray-600 hover:text-primary">
+                  {session.user?.name}
+                </Link>
                 <button
                   onClick={() => signOut({ callbackUrl: "/" })}
                   className="btn-ghost text-sm"
@@ -153,12 +155,15 @@ export function Header() {
                 <Link href="/admin" className="text-gray-600 hover:text-primary text-sm" onClick={() => setMobileOpen(false)}>Admin</Link>
               )}
               {session ? (
-                <button
-                  onClick={() => { signOut({ callbackUrl: "/" }); setMobileOpen(false); }}
-                  className="text-left text-gray-600 hover:text-primary text-sm"
-                >
-                  Logout
-                </button>
+                <>
+                  <Link href="/account" className="text-gray-600 hover:text-primary text-sm" onClick={() => setMobileOpen(false)}>My Profile</Link>
+                  <button
+                    onClick={() => { signOut({ callbackUrl: "/" }); setMobileOpen(false); }}
+                    className="text-left text-gray-600 hover:text-primary text-sm"
+                  >
+                    Logout
+                  </button>
+                </>
               ) : isFeatureEnabled("BUYER_ACCOUNTS") ? (
                 <>
                   <Link href="/auth/login" className="text-gray-600 hover:text-primary text-sm" onClick={() => setMobileOpen(false)}>Login</Link>

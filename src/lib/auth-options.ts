@@ -58,6 +58,24 @@ export const authOptions: NextAuthOptions = {
         session.user.phoneVerified = token.phoneVerified;
         session.user.producerId = token.producerId;
         session.user.verifiedProducer = token.verifiedProducer;
+
+        const id = token.sub;
+        if (id) {
+          try {
+            const user = await prisma.user.findUnique({
+              where: { id },
+              select: { name: true, email: true, phone: true, phoneVerified: true },
+            });
+            if (user) {
+              session.user.name = user.name;
+              session.user.email = user.email;
+              session.user.phone = user.phone;
+              session.user.phoneVerified = user.phoneVerified;
+            }
+          } catch (error) {
+            console.error("Session refresh error:", error);
+          }
+        }
       }
       return session;
     },
