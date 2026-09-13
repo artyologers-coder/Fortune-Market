@@ -5,10 +5,12 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { getImagesList } from "@/lib/product-images";
 import { isFeatureEnabled } from "@/lib/feature-flags";
+import { ProductShareButton } from "@/components/product/product-share-button";
 
 interface ProductDetailProps {
   product: {
     id: string;
+    slug?: string | null;
     name: string;
     nameSi: string;
     description: string;
@@ -225,6 +227,17 @@ export function ProductDetail({ product }: ProductDetailProps) {
           >
             Buy Now
           </button>
+        </div>
+
+        <div className="mt-3">
+          <ProductShareButton
+            product={{
+              id: product.id,
+              slug: product.slug,
+              name: product.name,
+              description: product.description,
+            }}
+          />
         </div>
 
         {isFeatureEnabled("INTERNAL_CHAT") && session?.user?.role === "BUYER" && (
