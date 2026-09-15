@@ -130,7 +130,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { name, nameSi, categoryId, price, originalPrice, stock, unit, unitSi, description, descriptionSi, images } = body;
+    const { name, nameSi, categoryId, price, originalPrice, codAmount, codUnit, stock, unit, unitSi, description, descriptionSi, images } = body;
 
     if (!name || !categoryId || !price) {
       return NextResponse.json({ error: "Name, category, and price are required" }, { status: 400 });
@@ -154,6 +154,8 @@ export async function POST(req: NextRequest) {
         descriptionSi: descriptionSi || description || "",
         price: parseFloat(price),
         originalPrice: originalPrice ? parseFloat(originalPrice) : null,
+        codAmount: codAmount ? parseFloat(codAmount) : null,
+        codUnit: codUnit || null,
         unit: unit || "piece",
         unitSi: unitSi || "කැබැල්ල",
         images: JSON.stringify(images || []),

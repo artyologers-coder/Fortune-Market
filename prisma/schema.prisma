@@ -86,6 +86,8 @@ model Product {
   descriptionSi String
   price         Float
   originalPrice Float?
+  codAmount     Float?
+  codUnit       String?
   unit          String
   unitSi        String
   images        String   @default("[]")

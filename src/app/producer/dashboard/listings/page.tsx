@@ -66,6 +66,8 @@ function ProducerListingsContent() {
     categoryId: "",
     price: "",
     originalPrice: "",
+    codAmount: "",
+    codUnit: "per_unit",
     unit: "piece",
     unitSi: "කැබැල්ල",
     stock: "",
@@ -118,6 +120,8 @@ function ProducerListingsContent() {
               categoryId: p.categoryId || "",
               price: p.price != null ? String(p.price) : "",
               originalPrice: p.originalPrice != null ? String(p.originalPrice) : "",
+              codAmount: p.codAmount != null ? String(p.codAmount) : "",
+              codUnit: p.codUnit || "per_unit",
               unit: p.unit || "piece",
               unitSi: p.unitSi || "කැබැල්ල",
               stock: p.stock != null ? String(p.stock) : "",
@@ -228,7 +232,7 @@ function ProducerListingsContent() {
         if (!editing) {
           setForm({
             name: "", nameSi: "", description: "", descriptionSi: "",
-            categoryId: "", price: "", originalPrice: "", unit: "piece",
+            categoryId: "", price: "", originalPrice: "", codAmount: "", codUnit: "per_unit", unit: "piece",
             unitSi: "කැබැල්ල", stock: "", active: true, images: [],
           });
         } else {
@@ -391,6 +395,21 @@ function ProducerListingsContent() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Stock</label>
               <input type="number" value={form.stock} onChange={(e) => update("stock", e.target.value)} className="input-field" required min="0" />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Islandwide Cash On Delivery (Rs.)</label>
+            <div className="grid grid-cols-2 sm:grid-cols-2 gap-4">
+              <div>
+                <input type="number" value={form.codAmount} onChange={(e) => update("codAmount", e.target.value)} className="input-field" min="0" step="0.01" placeholder="0.00" />
+              </div>
+              <div>
+                <select value={form.codUnit} onChange={(e) => update("codUnit", e.target.value)} className="input-field">
+                  <option value="per_unit">Per Unit</option>
+                  <option value="per_kg">Per 1 Kg</option>
+                </select>
+              </div>
             </div>
           </div>
 

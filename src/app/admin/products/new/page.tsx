@@ -29,6 +29,8 @@ export default function AdminNewProductPage() {
     categoryId: "",
     price: "",
     originalPrice: "",
+    codAmount: "",
+    codUnit: "per_unit",
     stock: "0",
     unit: "piece",
     unitSi: "කැබැල්ල",
@@ -88,6 +90,8 @@ export default function AdminNewProductPage() {
           categoryId: form.categoryId,
           price: form.price,
           originalPrice: form.originalPrice || undefined,
+          codAmount: form.codAmount || undefined,
+          codUnit: form.codUnit,
           stock: form.stock || undefined,
           unit: form.unit || undefined,
           unitSi: form.unitSi || undefined,
@@ -102,7 +106,7 @@ export default function AdminNewProductPage() {
       if (res.ok) {
         setSuccess(true);
         setImageUrls([]);
-        setForm({ name: "", nameSi: "", categoryId: "", price: "", originalPrice: "", stock: "0", unit: "piece", unitSi: "කැබැල්ල", description: "", descriptionSi: "" });
+        setForm({ name: "", nameSi: "", categoryId: "", price: "", originalPrice: "", codAmount: "", codUnit: "per_unit", stock: "0", unit: "piece", unitSi: "කැබැල්ල", description: "", descriptionSi: "" });
       } else {
         setError(data.error || "Failed to create product");
       }
@@ -192,6 +196,29 @@ export default function AdminNewProductPage() {
               min="0"
               step="0.01"
             />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Islandwide Cash On Delivery (Rs.)</label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <input
+              type="number"
+              value={form.codAmount}
+              onChange={(e) => update("codAmount", e.target.value)}
+              className="input-field"
+              min="0"
+              step="0.01"
+              placeholder="0.00"
+            />
+            <select
+              value={form.codUnit}
+              onChange={(e) => update("codUnit", e.target.value)}
+              className="input-field"
+            >
+              <option value="per_unit">Per Unit</option>
+              <option value="per_kg">Per 1 Kg</option>
+            </select>
           </div>
         </div>
 

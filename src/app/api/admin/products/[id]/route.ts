@@ -68,6 +68,12 @@ export async function PUT(
     if (body.originalPrice !== undefined) {
       data.originalPrice = body.originalPrice ? parseFloat(body.originalPrice) : null;
     }
+    if (body.codAmount !== undefined) {
+      data.codAmount = body.codAmount ? parseFloat(body.codAmount) : null;
+    }
+    if (body.codUnit !== undefined) {
+      data.codUnit = body.codUnit || null;
+    }
     if (body.stock !== undefined) data.stock = parseInt(body.stock);
     if (body.unit !== undefined) data.unit = String(body.unit);
     if (body.unitSi !== undefined) data.unitSi = String(body.unitSi);
