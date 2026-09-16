@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import type { Prisma } from "@prisma/client";
 import { ProductImage } from "@/components/product/product-image";
+import { visibleProducerProductWhere } from "@/lib/producer-membership";
 
 type ProductWithProducer = Prisma.ProductGetPayload<{
   include: { producer: { include: { user: { select: { name: true } } } } };
@@ -38,7 +39,12 @@ export default async function CategoryPage({ params }: Props) {
   let products: ProductWithProducer[] = [];
   try {
     products = await prisma.product.findMany({
-      where: { categoryId: category.id, active: true, flagged: false },
+      where: {
+        categoryId: category.id,
+        active: true,
+        flagged: false,
+        ...visibleProducerProductWhere(),
+      },
       include: {
         producer: { include: { user: { select: { name: true } } } },
       },

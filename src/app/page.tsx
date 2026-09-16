@@ -3,6 +3,7 @@ import { getDictionary } from "@/lib/i18n";
 import Link from "next/link";
 import { Logo } from "@/components/ui/logo";
 import { ProductImage } from "@/components/product/product-image";
+import { visibleProducerProductWhere, activeMembershipWhere } from "@/lib/producer-membership";
 
 export default function HomePage() {
   const dict = getDictionary("en");
@@ -68,7 +69,10 @@ async function FeaturedProducers() {
   let producers;
   try {
     producers = await prisma.producer.findMany({
-      where: { verificationStatus: "APPROVED" },
+      where: {
+        verificationStatus: "APPROVED",
+        ...activeMembershipWhere(),
+      },
       include: { user: { select: { name: true } } },
       orderBy: { rating: "desc" },
       take: 4,
@@ -111,7 +115,7 @@ async function FeaturedProducts() {
   let products;
   try {
     products = await prisma.product.findMany({
-      where: { active: true, flagged: false },
+      where: { active: true, flagged: false, ...visibleProducerProductWhere() },
       include: {
         producer: { include: { user: { select: { name: true } } } },
         category: { select: { name: true, nameSi: true } },

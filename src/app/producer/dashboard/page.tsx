@@ -12,6 +12,9 @@ interface Producer {
   businessNameSi: string;
   verificationStatus: string;
   verifiedAt: string | null;
+  membershipId: string | null;
+  membershipActivatedAt: string | null;
+  membershipExpiresAt: string | null;
   rating: number;
   totalReviews: number;
 }
@@ -233,6 +236,42 @@ export default function ProducerDashboard() {
         <div className="card p-5">
           <p className="text-xs text-gray-500 mb-1">Revenue</p>
           <p className="text-2xl font-bold text-primary">Rs. {sales.revenue.toLocaleString()}</p>
+        </div>
+      </div>
+
+      <div className={`card p-5 mb-6 ${producer?.membershipExpiresAt && new Date(producer.membershipExpiresAt) <= new Date() ? "border-red-200 bg-red-50" : "border-primary-100 bg-primary-50"}`}>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <p className="text-xs text-gray-500 mb-1">Producer Membership</p>
+            <div className="flex items-center gap-3 flex-wrap">
+              {producer?.membershipId ? (
+                <span className="font-mono font-bold text-gray-900 text-lg">{producer.membershipId}</span>
+              ) : (
+                <span className="text-sm text-gray-500">No membership issued yet</span>
+              )}
+              {producer?.membershipExpiresAt && (
+                new Date(producer.membershipExpiresAt) > new Date() ? (
+                  <span className="badge-verified">✓ Active</span>
+                ) : (
+                  <span className="badge-rejected text-xs">Expired</span>
+                )
+              )}
+            </div>
+          </div>
+          <div className="text-sm text-gray-600">
+            {producer?.membershipActivatedAt && (
+              <p>Active from {new Date(producer.membershipActivatedAt).toLocaleDateString("en-LK")}</p>
+            )}
+            {producer?.membershipExpiresAt && (
+              <p>
+                {new Date(producer.membershipExpiresAt) > new Date() ? (
+                  <>Expires {new Date(producer.membershipExpiresAt).toLocaleDateString("en-LK")}</>
+                ) : (
+                  <span className="font-medium text-red-600">Expired {new Date(producer.membershipExpiresAt).toLocaleDateString("en-LK")} — contact an admin to renew</span>
+                )}
+              </p>
+            )}
+          </div>
         </div>
       </div>
 

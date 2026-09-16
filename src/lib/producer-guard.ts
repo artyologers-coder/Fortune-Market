@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/prisma";
+import { membershipIsActive } from "@/lib/producer-membership";
 
 export class ProducerGuardError extends Error {
   status: number;
@@ -37,6 +38,13 @@ export async function requireApprovedProducer() {
     throw new ProducerGuardError(
       403,
       "Your producer account is awaiting approval. You can list and edit products once an admin approves your profile."
+    );
+  }
+
+  if (!membershipIsActive(producer)) {
+    throw new ProducerGuardError(
+      403,
+      "Your producer membership has expired. Please contact an admin to renew."
     );
   }
 

@@ -21,6 +21,9 @@ interface Producer {
   location: string;
   district: string;
   businessRegistrationNo: string | null;
+  membershipId: string | null;
+  membershipActivatedAt: string | null;
+  membershipExpiresAt: string | null;
   user: { name: string; email: string; phone: string };
 }
 
@@ -89,7 +92,7 @@ interface AdminUser {
   phoneVerified: boolean;
   role: string;
   createdAt: string;
-  producer: { id: string; verificationStatus: string } | null;
+  producer: { id: string; verificationStatus: string; membershipId: string | null } | null;
 }
 
 interface ResetModalData {
@@ -103,6 +106,7 @@ export default function AdminPage() {
   const router = useRouter();
   const [stats, setStats] = useState<Stats | null>(null);
   const [pendingProducers, setPendingProducers] = useState<Producer[]>([]);
+  const [allProducers, setAllProducers] = useState<Producer[]>([]);
   const [flaggedProducts, setFlaggedProducts] = useState<Product[]>([]);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [allPage, setAllPage] = useState(1);
@@ -130,7 +134,7 @@ export default function AdminPage() {
   const [userSearch, setUserSearch] = useState("");
   const [resettingUserId, setResettingUserId] = useState<string | null>(null);
   const [resetModal, setResetModal] = useState<ResetModalData | null>(null);
-  const [activeTab, setActiveTab] = useState<"overview" | "verification" | "moderation" | "products" | "reseller-import" | "reseller-products" | "reseller-settings" | "orders" | "users" | "add-product">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "verification" | "memberships" | "moderation" | "products" | "reseller-import" | "reseller-products" | "reseller-settings" | "orders" | "users" | "add-product">("overview");
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -149,12 +153,13 @@ export default function AdminPage() {
 
   async function fetchData() {
     try {
-      const [statsRes, producersRes, productsRes, ordersRes, usersRes] = await Promise.all([
+      const [statsRes, producersRes, productsRes, ordersRes, usersRes, allProducersRes] = await Promise.all([
         fetch("/api/admin"),
         fetch("/api/admin/producers"),
         fetch("/api/admin/products"),
         fetch("/api/orders"),
         fetch("/api/admin/users"),
+        fetch("/api/admin/producers?filter=all"),
       ]);
 
       if (statsRes.ok) {
@@ -165,6 +170,11 @@ export default function AdminPage() {
       if (producersRes.ok) {
         const data = await producersRes.json();
         setPendingProducers(data.producers || []);
+      }
+
+      if (allProducersRes.ok) {
+        const data = await allProducersRes.json();
+        setAllProducers(data.producers || []);
       }
 
       if (productsRes.ok) {
@@ -243,6 +253,26 @@ export default function AdminPage() {
         pendingVerifications: stats.pendingVerifications - 1,
       });
     }
+  }
+
+  async function handleRenewMembership(producerId: string) {
+    if (!confirm("Activate/renew this producer's membership for 365 days?")) return;
+    const res = await fetch("/api/admin", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "renew", targetId: producerId, targetType: "producer" }),
+    });
+    if (!res.ok) {
+      alert("Failed to renew membership");
+      return;
+    }
+    const renewed = await res.json();
+    if (renewed.producer) {
+      setAllProducers((prev) =>
+        prev.map((p) => (p.id === producerId ? { ...p, ...renewed.producer } : p))
+      );
+    }
+    fetchData();
   }
 
   async function handleProductAction(productId: string, action: "flag" | "unflag") {
@@ -327,7 +357,7 @@ export default function AdminPage() {
       <h1 className="text-3xl font-bold text-gray-900 mb-8">Admin Panel</h1>
 
       <div className="flex gap-2 mb-6 border-b border-gray-200">
-        {(["overview", "verification", "moderation", "products", "orders", "users", "reseller-import", "reseller-products", "reseller-settings", "add-product"] as const)
+        {(["overview", "verification", "memberships", "moderation", "products", "orders", "users", "reseller-import", "reseller-products", "reseller-settings", "add-product"] as const)
           .filter((tab) => isFeatureEnabled("COMMISSION_SYSTEM") || !tab.startsWith("reseller-"))
           .map((tab) => (
           <button
@@ -339,7 +369,7 @@ export default function AdminPage() {
                 : "border-transparent text-gray-500 hover:text-gray-700"
             }`}
           >
-            {tab === "overview" ? "Overview" : tab === "verification" ? "Verification" : tab === "moderation" ? "Moderation" : tab === "products" ? "Products" : tab === "orders" ? "Orders" : tab === "users" ? "Users" : tab === "reseller-import" ? "Reseller Import" : tab === "reseller-products" ? "Reseller Products" : tab === "reseller-settings" ? "Reseller Settings" : "Add Product"}
+            {tab === "overview" ? "Overview" : tab === "verification" ? "Verification" : tab === "memberships" ? "Memberships" : tab === "moderation" ? "Moderation" : tab === "products" ? "Products" : tab === "orders" ? "Orders" : tab === "users" ? "Users" : tab === "reseller-import" ? "Reseller Import" : tab === "reseller-products" ? "Reseller Products" : tab === "reseller-settings" ? "Reseller Settings" : "Add Product"}
           </button>
         ))}
       </div>
@@ -403,6 +433,77 @@ export default function AdminPage() {
                 </div>
               </div>
             ))
+          )}
+        </div>
+      )}
+
+      {activeTab === "memberships" && (
+        <div className="space-y-4">
+          {allProducers.length === 0 ? (
+            <p className="text-center text-gray-500 py-12">No producers yet</p>
+          ) : (
+            allProducers.map((producer) => {
+              const status = producer.membershipId
+                ? producer.membershipExpiresAt &&
+                  new Date(producer.membershipExpiresAt) > new Date()
+                  ? "ACTIVE"
+                  : "EXPIRED"
+                : "NONE";
+              return (
+                <div key={producer.id} className="card p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <h3 className="font-bold text-gray-900">{producer.businessNameSi}</h3>
+                      <p className="text-sm text-gray-500">{producer.businessName}</p>
+                      <p className="text-sm text-gray-500">{producer.location}</p>
+                      <p className="text-xs text-gray-400">{producer.user.email}</p>
+                      {producer.membershipId && (
+                        <p className="text-sm mt-1">
+                          <span className="text-gray-500">Membership:</span>{" "}
+                          <span className="font-mono font-medium text-gray-900">{producer.membershipId}</span>
+                          {producer.membershipActivatedAt && (
+                            <span className="text-gray-500">
+                              {" "}· Active from {new Date(producer.membershipActivatedAt).toLocaleDateString("en-LK")}
+                            </span>
+                          )}
+                        </p>
+                      )}
+                      <div className="flex items-center gap-2 mt-2">
+                        <span
+                          className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                            status === "ACTIVE"
+                              ? "bg-green-100 text-green-700"
+                              : status === "EXPIRED"
+                              ? "bg-red-100 text-red-700"
+                              : "bg-gray-100 text-gray-500"
+                          }`}
+                        >
+                          {status === "NONE" ? "No membership" : status}
+                        </span>
+                        {producer.membershipExpiresAt && (
+                          <span className="text-xs text-gray-500">
+                            Expires {new Date(producer.membershipExpiresAt).toLocaleDateString("en-LK")}
+                          </span>
+                        )}
+                        {producer.verificationStatus === "PENDING" && (
+                          <span className="badge-pending text-xs">Pending Approval</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      {producer.verificationStatus === "APPROVED" && (
+                        <button
+                          onClick={() => handleRenewMembership(producer.id)}
+                          className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-700"
+                        >
+                          Renew Membership
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })
           )}
         </div>
       )}

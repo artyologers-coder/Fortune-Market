@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { visibleProducerProductWhere } from "@/lib/producer-membership";
 
 export async function GET(req: NextRequest) {
   try {
@@ -18,6 +19,7 @@ export async function GET(req: NextRequest) {
     const where: any = {
       active: true,
       flagged: false,
+      ...visibleProducerProductWhere(),
     };
 
     if (category) {

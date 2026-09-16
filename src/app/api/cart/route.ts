@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/prisma";
+import { membershipStatus } from "@/lib/producer-membership";
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,9 +18,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid product or quantity" }, { status: 400 });
     }
 
-    const product = await prisma.product.findUnique({ where: { id: productId } });
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+      include: { producer: true },
+    });
     if (!product || !product.active) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
+    }
+
+    if (membershipStatus(product.producer) === "EXPIRED") {
+      return NextResponse.json(
+        { error: "This product is unavailable. The seller's membership has expired." },
+        { status: 400 }
+      );
     }
 
     if (product.stock < quantity) {

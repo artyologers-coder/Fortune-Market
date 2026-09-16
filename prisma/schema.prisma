@@ -49,6 +49,9 @@ model Producer {
   district           String
   phone              String
   businessRegistrationNo String?
+  membershipId       String?   @unique
+  membershipActivatedAt DateTime?
+  membershipExpiresAt DateTime?
   verificationStatus String    @default("PENDING")
   verifiedAt         DateTime?
   rating             Float     @default(0)

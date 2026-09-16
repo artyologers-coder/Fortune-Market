@@ -24,7 +24,15 @@ export async function GET() {
         phoneVerified: true,
         role: true,
         createdAt: true,
-        producer: { select: { id: true, verificationStatus: true } },
+        producer: {
+          select: {
+            id: true,
+            verificationStatus: true,
+            membershipId: true,
+            membershipActivatedAt: true,
+            membershipExpiresAt: true,
+          },
+        },
       },
       orderBy: { createdAt: "desc" },
     });

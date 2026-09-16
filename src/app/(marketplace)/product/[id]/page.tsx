@@ -5,6 +5,7 @@ import { ProductDetail } from "@/components/product/product-detail";
 import { ReviewSection } from "@/components/product/review-section";
 import { ProductImage } from "@/components/product/product-image";
 import { getFirstImage } from "@/lib/product-images";
+import { visibleProducerProductWhere } from "@/lib/producer-membership";
 import type { Metadata } from "next";
 
 interface Props {
@@ -16,7 +17,7 @@ const BASE_URL =
 
 function findProduct(key: string) {
   return prisma.product.findFirst({
-    where: { OR: [{ id: key }, { slug: key }] },
+    where: { OR: [{ id: key }, { slug: key }], ...visibleProducerProductWhere() },
   });
 }
 
@@ -77,6 +78,7 @@ export default async function ProductPage({ params }: Props) {
         id: { not: product.id },
         active: true,
         flagged: false,
+        ...visibleProducerProductWhere(),
       },
       take: 4,
     });

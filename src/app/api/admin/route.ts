@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/prisma";
+import { activateMembership, renewMembership } from "@/lib/producer-membership";
 
 export async function GET() {
   try {
@@ -58,12 +59,17 @@ export async function PATCH(req: NextRequest) {
 
     const { action, targetId, targetType } = await req.json();
 
+    let updatedProducer = null;
+
     if (targetType === "producer") {
       if (action === "approve") {
         await prisma.producer.update({
           where: { id: targetId },
           data: { verificationStatus: "APPROVED", verifiedAt: new Date() },
         });
+        updatedProducer = await activateMembership(targetId);
+      } else if (action === "renew") {
+        updatedProducer = await renewMembership(targetId);
       } else if (action === "reject") {
         await prisma.producer.update({
           where: { id: targetId },
@@ -108,7 +114,7 @@ export async function PATCH(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({ message: "Action completed" });
+    return NextResponse.json({ message: "Action completed", producer: updatedProducer });
   } catch (error) {
     console.error("Admin action error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

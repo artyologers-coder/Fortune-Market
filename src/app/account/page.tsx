@@ -24,6 +24,9 @@ interface ProducerProfile {
   district: string;
   phone: string;
   verificationStatus: string;
+  membershipId: string | null;
+  membershipActivatedAt: string | null;
+  membershipExpiresAt: string | null;
 }
 
 export default function AccountPage() {
@@ -459,6 +462,38 @@ export default function AccountPage() {
                 </button>
               </div>
             </form>
+          )}
+
+          {producer?.membershipId && (
+            <div className="card p-6 mb-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-3">Membership</h2>
+              <div className="flex items-center gap-3 flex-wrap">
+                <span className="font-mono font-bold text-gray-900">{producer.membershipId}</span>
+                {producer.membershipExpiresAt && (
+                  new Date(producer.membershipExpiresAt) > new Date() ? (
+                    <span className="badge-verified">✓ Active</span>
+                  ) : (
+                    <span className="badge-rejected text-xs">Expired</span>
+                  )
+                )}
+              </div>
+              {producer.membershipActivatedAt && (
+                <p className="text-sm text-gray-500 mt-2">
+                  Active from {new Date(producer.membershipActivatedAt).toLocaleDateString("en-LK")}
+                </p>
+              )}
+              {producer.membershipExpiresAt && (
+                <p className="text-sm text-gray-500 mt-1">
+                  {new Date(producer.membershipExpiresAt) > new Date() ? (
+                    <>Expires {new Date(producer.membershipExpiresAt).toLocaleDateString("en-LK")}</>
+                  ) : (
+                    <span className="font-medium text-red-600">
+                      Expired {new Date(producer.membershipExpiresAt).toLocaleDateString("en-LK")} — contact an admin to renew
+                    </span>
+                  )}
+                </p>
+              )}
+            </div>
           )}
 
           {session?.user?.role === "PRODUCER" && (

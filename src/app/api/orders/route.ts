@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { paymentGateway } from "@/lib/payment-gateway";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import { computeCodFee } from "@/lib/cod-fee";
+import { membershipStatus } from "@/lib/producer-membership";
 
 export async function POST(req: NextRequest) {
   if (!isFeatureEnabled("COD_ORDERS")) {
@@ -30,12 +31,20 @@ export async function POST(req: NextRequest) {
     for (const item of items) {
       const product = await prisma.product.findUnique({
         where: { id: item.productId },
+        include: { producer: true },
       });
 
       if (!product || !product.active) {
         return NextResponse.json(
           { error: `Product ${item.productId} not found` },
           { status: 404 }
+        );
+      }
+
+      if (membershipStatus(product.producer) === "EXPIRED") {
+        return NextResponse.json(
+          { error: `${product.name} is unavailable. The seller's membership has expired.` },
+          { status: 400 }
         );
       }
 

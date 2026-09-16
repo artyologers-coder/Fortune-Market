@@ -1,9 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/prisma";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
@@ -15,8 +15,14 @@ export async function GET() {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    const { searchParams } = new URL(req.url);
+    const filter = searchParams.get("filter") || "pending";
+
     const producers = await prisma.producer.findMany({
-      where: { verificationStatus: "PENDING" },
+      where:
+        filter === "all"
+          ? {}
+          : { verificationStatus: "PENDING" },
       include: { user: { select: { name: true, email: true, phone: true } } },
       orderBy: { createdAt: "asc" },
     });

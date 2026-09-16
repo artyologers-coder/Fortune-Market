@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/prisma";
+import { activeMembershipWhere } from "@/lib/producer-membership";
 
 export async function POST(req: NextRequest) {
   try {
@@ -52,7 +53,11 @@ export async function POST(req: NextRequest) {
 export async function GET() {
   try {
     const offers = await prisma.offer.findMany({
-      where: { status: "APPROVED", endDate: { gt: new Date() } },
+      where: {
+        status: "APPROVED",
+        endDate: { gt: new Date() },
+        producer: activeMembershipWhere(),
+      },
       include: { producer: { include: { user: { select: { name: true } } } } },
       orderBy: { createdAt: "desc" },
     });
