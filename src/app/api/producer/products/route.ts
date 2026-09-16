@@ -16,6 +16,7 @@ const ALLOWED_UPDATE_FIELDS = [
   "originalPrice",
   "codAmount",
   "codUnit",
+  "codUnitsPerKg",
   "unit",
   "unitSi",
   "stock",
@@ -83,6 +84,7 @@ export async function POST(req: NextRequest) {
       originalPrice,
       codAmount,
       codUnit,
+      codUnitsPerKg,
       unit,
       unitSi,
       stock,
@@ -119,6 +121,7 @@ export async function POST(req: NextRequest) {
         originalPrice: originalPrice ? parseFloat(originalPrice) : null,
         codAmount: codAmount ? parseFloat(codAmount) : null,
         codUnit: codUnit || null,
+        codUnitsPerKg: codUnitsPerKg ? parseFloat(codUnitsPerKg) : null,
         unit: unit || "piece",
         unitSi: unitSi || "කැබැල්ල",
         stock: parseInt(stock) || 0,
@@ -169,6 +172,9 @@ export async function PUT(req: NextRequest) {
           break;
         case "codUnit":
           data.codUnit = value || null;
+          break;
+        case "codUnitsPerKg":
+          data.codUnitsPerKg = value ? parseFloat(value) : null;
           break;
         case "stock":
           data.stock = parseInt(value);

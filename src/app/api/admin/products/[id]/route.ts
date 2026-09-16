@@ -74,6 +74,9 @@ export async function PUT(
     if (body.codUnit !== undefined) {
       data.codUnit = body.codUnit || null;
     }
+    if (body.codUnitsPerKg !== undefined) {
+      data.codUnitsPerKg = body.codUnitsPerKg ? parseFloat(body.codUnitsPerKg) : null;
+    }
     if (body.stock !== undefined) data.stock = parseInt(body.stock);
     if (body.unit !== undefined) data.unit = String(body.unit);
     if (body.unitSi !== undefined) data.unitSi = String(body.unitSi);

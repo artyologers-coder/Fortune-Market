@@ -32,6 +32,7 @@ export default function AdminNewProductPage() {
     originalPrice: "",
     codAmount: "",
     codUnit: "per_unit",
+    codUnitsPerKg: "",
     stock: "0",
     unit: "piece",
     unitSi: "කැබැල්ල",
@@ -94,6 +95,7 @@ export default function AdminNewProductPage() {
           originalPrice: form.originalPrice || undefined,
           codAmount: form.codAmount || undefined,
           codUnit: form.codUnit,
+          codUnitsPerKg: form.codUnitsPerKg || undefined,
           stock: form.stock || undefined,
           unit: form.unit || undefined,
           unitSi: form.unitSi || undefined,
@@ -109,7 +111,7 @@ export default function AdminNewProductPage() {
       if (res.ok) {
         setSuccess(true);
         setImageUrls([]);
-        setForm({ name: "", nameSi: "", categoryId: "", price: "", originalPrice: "", codAmount: "", codUnit: "per_unit", stock: "0", unit: "piece", unitSi: "කැබැල්ල", certifications: [], description: "", descriptionSi: "" });
+        setForm({ name: "", nameSi: "", categoryId: "", price: "", originalPrice: "", codAmount: "", codUnit: "per_unit", codUnitsPerKg: "", stock: "0", unit: "piece", unitSi: "කැබැල්ල", certifications: [], description: "", descriptionSi: "" });
       } else {
         setError(data.error || "Failed to create product");
       }
@@ -223,6 +225,20 @@ export default function AdminNewProductPage() {
               <option value="per_kg">Per 1 Kg</option>
             </select>
           </div>
+          {form.codUnit === "per_kg" && (
+            <div className="mt-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Units per 1 Kg (after packaging)</label>
+              <input
+                type="number"
+                value={form.codUnitsPerKg}
+                onChange={(e) => update("codUnitsPerKg", e.target.value)}
+                className="input-field"
+                min="0.01"
+                step="0.01"
+                placeholder="e.g. 4"
+              />
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

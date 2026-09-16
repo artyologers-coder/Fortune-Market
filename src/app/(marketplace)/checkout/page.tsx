@@ -4,16 +4,26 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { isFeatureEnabled } from "@/lib/feature-flags";
+import { computeCodFee } from "@/lib/cod-fee";
+
+interface CartProduct {
+  id: string;
+  name: string;
+  nameSi: string;
+  price: number;
+  codAmount: number | null;
+  codUnit: string | null;
+  codUnitsPerKg: number | null;
+  producer?: {
+    id: string;
+    businessName: string;
+  } | null;
+}
 
 interface CartItem {
   productId: string;
   quantity: number;
-  product: {
-    id: string;
-    name: string;
-    nameSi: string;
-    price: number;
-  };
+  product: CartProduct;
 }
 
 export default function CheckoutPage() {
@@ -50,7 +60,36 @@ export default function CheckoutPage() {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
-  const total = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+  const itemFee = (item: CartItem) => computeCodFee(item.quantity, item.product);
+
+  const groups = cart.reduce<
+    {
+      producerId: string;
+      producerName: string;
+      items: CartItem[];
+      subtotal: number;
+      codFee: number;
+      total: number;
+    }[]
+  >((acc, item) => {
+    const producer = item.product.producer;
+    const producerId = producer?.id || "unknown";
+    const producerName = producer?.businessName || "Seller";
+    let group = acc.find((g) => g.producerId === producerId);
+    if (!group) {
+      group = { producerId, producerName, items: [], subtotal: 0, codFee: 0, total: 0 };
+      acc.push(group);
+    }
+    group.items.push(item);
+    group.subtotal += item.product.price * item.quantity;
+    group.codFee += itemFee(item);
+    group.total = group.subtotal + group.codFee;
+    return acc;
+  }, []);
+
+  const subtotal = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+  const codTotal = cart.reduce((sum, item) => sum + itemFee(item), 0);
+  const total = subtotal + codTotal;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -213,12 +252,27 @@ export default function CheckoutPage() {
           <div className="card p-6 h-fit">
             <h2 className="text-lg font-bold text-gray-900 mb-4">Order Summary</h2>
             <div className="space-y-3 mb-4">
-              {cart.map((item) => (
-                <div key={item.productId} className="flex justify-between text-sm">
-                  <span className="text-gray-600">
-                    {item.product.name} × {item.quantity}
-                  </span>
-                  <span className="font-medium">Rs. {item.product.price * item.quantity}</span>
+              {groups.map((group) => (
+                <div key={group.producerId}>
+                  <p className="text-xs font-semibold text-gray-500 mb-1">{group.producerName}</p>
+                  {group.items.map((item) => (
+                    <div key={item.productId} className="flex justify-between text-sm">
+                      <span className="text-gray-600">
+                        {item.product.name} × {item.quantity}
+                      </span>
+                      <span className="font-medium">Rs. {item.product.price * item.quantity}</span>
+                    </div>
+                  ))}
+                  {group.codFee > 0 && (
+                    <div className="flex justify-between text-xs text-gray-500">
+                      <span>Delivery fee (COD)</span>
+                      <span className="font-medium">Rs. {group.codFee}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-sm font-semibold border-b border-gray-100 pb-2 mt-1">
+                    <span>{group.producerName} total</span>
+                    <span>Rs. {group.total}</span>
+                  </div>
                 </div>
               ))}
             </div>

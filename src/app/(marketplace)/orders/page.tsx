@@ -9,6 +9,7 @@ interface OrderItem {
   id: string;
   quantity: number;
   price: number;
+  codFee?: number;
   product: {
     id: string;
     name: string;
@@ -147,6 +148,9 @@ export default function OrdersPage() {
                       <p className="text-xs text-gray-500">
                         Rs. {item.price} × {item.quantity}
                       </p>
+                      {item.codFee ? (
+                        <p className="text-xs text-gray-500">Delivery fee: Rs. {item.codFee}</p>
+                      ) : null}
                     </div>
                   </div>
                 ))}

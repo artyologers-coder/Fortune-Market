@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { getImagesList } from "@/lib/product-images";
 import { isFeatureEnabled } from "@/lib/feature-flags";
+import { computeCodFee } from "@/lib/cod-fee";
 import { ProductShareButton } from "@/components/product/product-share-button";
 
 interface ProductDetailProps {
@@ -17,6 +18,9 @@ interface ProductDetailProps {
     descriptionSi: string;
     price: number;
     originalPrice: number | null;
+    codAmount: number | null;
+    codUnit: string | null;
+    codUnitsPerKg: number | null;
     unit: string;
     unitSi: string;
     stock: number;
@@ -174,6 +178,16 @@ export function ProductDetail({ product }: ProductDetailProps) {
           ) : (
             <span className="text-red-600 text-sm font-medium">Out of Stock</span>
           )}
+          {product.codAmount && product.codAmount > 0 && (
+            <div className="mt-1">
+              <span className="text-sm font-medium text-gray-700">
+                Islandwide Delivery: Rs. {product.codAmount}
+                {product.codUnit === "per_kg"
+                  ? ` / kg${product.codUnitsPerKg ? ` (${product.codUnitsPerKg} ${product.unit} = 1 kg)` : ""}`
+                  : ` / ${product.unit}`}
+              </span>
+            </div>
+          )}
           {product.sourceUrl && product.externalStock && (
             <div className="mt-1">
               <span className={`text-xs ${
@@ -210,6 +224,11 @@ export function ProductDetail({ product }: ProductDetailProps) {
               +
             </button>
           </div>
+          {product.codAmount && product.codAmount > 0 && (
+            <span className="text-sm text-gray-600">
+              Delivery fee: Rs. {computeCodFee(quantity, product)}
+            </span>
+          )}
         </div>
 
         <div className="flex gap-3">

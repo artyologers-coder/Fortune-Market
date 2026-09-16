@@ -70,6 +70,7 @@ function ProducerListingsContent() {
     originalPrice: "",
     codAmount: "",
     codUnit: "per_unit",
+    codUnitsPerKg: "",
     certifications: [] as { type: string; number: string }[],
     unit: "piece",
     unitSi: "කැබැල්ල",
@@ -125,6 +126,7 @@ function ProducerListingsContent() {
               originalPrice: p.originalPrice != null ? String(p.originalPrice) : "",
               codAmount: p.codAmount != null ? String(p.codAmount) : "",
               codUnit: p.codUnit || "per_unit",
+              codUnitsPerKg: p.codUnitsPerKg != null ? String(p.codUnitsPerKg) : "",
               unit: p.unit || "piece",
               unitSi: p.unitSi || "කැබැල්ල",
               stock: p.stock != null ? String(p.stock) : "",
@@ -240,7 +242,7 @@ function ProducerListingsContent() {
         if (!editing) {
           setForm({
             name: "", nameSi: "", description: "", descriptionSi: "",
-            categoryId: "", price: "", originalPrice: "", codAmount: "", codUnit: "per_unit", unit: "piece",
+            categoryId: "", price: "", originalPrice: "", codAmount: "", codUnit: "per_unit", codUnitsPerKg: "", unit: "piece",
             unitSi: "කැබැල්ල", stock: "", active: true, images: [], certifications: [],
           });
         } else {
@@ -419,6 +421,20 @@ function ProducerListingsContent() {
                 </select>
               </div>
             </div>
+            {form.codUnit === "per_kg" && (
+              <div className="mt-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Units per 1 Kg (after packaging)</label>
+                <input
+                  type="number"
+                  value={form.codUnitsPerKg}
+                  onChange={(e) => update("codUnitsPerKg", e.target.value)}
+                  className="input-field"
+                  min="0.01"
+                  step="0.01"
+                  placeholder="e.g. 4"
+                />
+              </div>
+            )}
           </div>
 
           <div>

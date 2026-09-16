@@ -36,6 +36,7 @@ export default function AdminEditProductPage() {
     originalPrice: "",
     codAmount: "",
     codUnit: "per_unit",
+    codUnitsPerKg: "",
     stock: "0",
     unit: "piece",
     unitSi: "කැබැල්ල",
@@ -75,6 +76,7 @@ export default function AdminEditProductPage() {
             originalPrice: product.originalPrice != null ? String(product.originalPrice) : "",
             codAmount: product.codAmount != null ? String(product.codAmount) : "",
             codUnit: product.codUnit || "per_unit",
+            codUnitsPerKg: product.codUnitsPerKg != null ? String(product.codUnitsPerKg) : "",
             stock: product.stock != null ? String(product.stock) : "0",
             unit: product.unit || "piece",
             unitSi: product.unitSi || "කැබැල්ල",
@@ -113,6 +115,7 @@ export default function AdminEditProductPage() {
           originalPrice: form.originalPrice || undefined,
           codAmount: form.codAmount || undefined,
           codUnit: form.codUnit,
+          codUnitsPerKg: form.codUnitsPerKg || undefined,
           certifications: form.certifications,
           stock: form.stock,
           unit: form.unit,
@@ -242,6 +245,20 @@ export default function AdminEditProductPage() {
               <option value="per_kg">Per 1 Kg</option>
             </select>
           </div>
+          {form.codUnit === "per_kg" && (
+            <div className="mt-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Units per 1 Kg (after packaging)</label>
+              <input
+                type="number"
+                value={form.codUnitsPerKg}
+                onChange={(e) => update("codUnitsPerKg", e.target.value)}
+                className="input-field"
+                min="0.01"
+                step="0.01"
+                placeholder="e.g. 4"
+              />
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/prisma";
 import { paymentGateway } from "@/lib/payment-gateway";
 import { isFeatureEnabled } from "@/lib/feature-flags";
+import { computeCodFee } from "@/lib/cod-fee";
 
 export async function POST(req: NextRequest) {
   if (!isFeatureEnabled("COD_ORDERS")) {
@@ -45,11 +46,13 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      totalAmount += product.price * item.quantity;
+      const codFee = computeCodFee(item.quantity, product);
+      totalAmount += product.price * item.quantity + codFee;
       orderItems.push({
         productId: product.id,
         quantity: item.quantity,
         price: product.price,
+        codFee,
       });
     }
 
