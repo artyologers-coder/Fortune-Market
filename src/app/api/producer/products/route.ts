@@ -22,6 +22,7 @@ const ALLOWED_UPDATE_FIELDS = [
   "active",
   "images",
   "brandLogoUrl",
+  "certifications",
 ] as const;
 
 async function getProducer(session: { user: { id?: string | null } }) {
@@ -87,6 +88,7 @@ export async function POST(req: NextRequest) {
       stock,
       images,
       brandLogoUrl,
+      certifications,
     } = body;
 
     if (!name || !price || !categoryId) {
@@ -123,6 +125,7 @@ export async function POST(req: NextRequest) {
         images: JSON.stringify(Array.isArray(images) ? images : []),
         slug,
         brandLogoUrl: brandLogoUrl || null,
+        certifications: JSON.stringify(Array.isArray(certifications) ? certifications : []),
       },
     });
 
@@ -175,6 +178,9 @@ export async function PUT(req: NextRequest) {
           break;
         case "brandLogoUrl":
           data.brandLogoUrl = value ? String(value) : null;
+          break;
+        case "certifications":
+          data.certifications = JSON.stringify(Array.isArray(value) ? value : []);
           break;
         default:
           (data as Record<string, unknown>)[field] = value;

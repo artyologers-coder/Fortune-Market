@@ -56,6 +56,7 @@ export async function PUT(req: NextRequest) {
       location?: string;
       district?: string;
       phone?: string;
+      businessRegistrationNo?: string | null;
     } = {};
 
     if (body.businessName !== undefined) {
@@ -114,6 +115,17 @@ export async function PUT(req: NextRequest) {
         );
       }
       data.phone = phone;
+    }
+
+    if (body.businessRegistrationNo !== undefined) {
+      const regNo = String(body.businessRegistrationNo).trim();
+      if (!regNo) {
+        return NextResponse.json(
+          { error: "Please enter a valid business registration number" },
+          { status: 400 }
+        );
+      }
+      data.businessRegistrationNo = regNo;
     }
 
     const updated = await prisma.producer.update({

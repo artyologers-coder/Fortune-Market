@@ -19,6 +19,8 @@ interface Producer {
   businessNameSi: string;
   verificationStatus: string;
   location: string;
+  district: string;
+  businessRegistrationNo: string | null;
   user: { name: string; email: string; phone: string };
 }
 
@@ -371,6 +373,11 @@ export default function AdminPage() {
                     <h3 className="font-bold text-gray-900">{producer.businessNameSi}</h3>
                     <p className="text-sm text-gray-500">{producer.businessName}</p>
                     <p className="text-sm text-gray-500">{producer.location}</p>
+                    {producer.businessRegistrationNo && (
+                      <p className="text-sm text-gray-500">
+                        Reg. No: <span className="font-medium">{producer.businessRegistrationNo}</span>
+                      </p>
+                    )}
                     <p className="text-xs text-gray-400">{producer.user.email}</p>
                   </div>
                   <div className="flex gap-2">

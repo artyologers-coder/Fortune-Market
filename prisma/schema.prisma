@@ -48,6 +48,7 @@ model Producer {
   location           String
   district           String
   phone              String
+  businessRegistrationNo String?
   verificationStatus String    @default("PENDING")
   verifiedAt         DateTime?
   rating             Float     @default(0)
@@ -88,6 +89,7 @@ model Product {
   originalPrice Float?
   codAmount     Float?
   codUnit       String?
+  certifications String  @default("[]")
   unit          String
   unitSi        String
   images        String   @default("[]")

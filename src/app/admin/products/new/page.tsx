@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { ImageManager } from "@/components/product/image-manager";
+import CertificationsInput from "@/components/product/certifications-input";
 import { CreativePromptNotice } from "@/components/producer/creative-prompt-notice";
 
 interface Category {
@@ -34,6 +35,7 @@ export default function AdminNewProductPage() {
     stock: "0",
     unit: "piece",
     unitSi: "කැබැල්ල",
+    certifications: [] as { type: string; number: string }[],
     description: "",
     descriptionSi: "",
   });
@@ -98,6 +100,7 @@ export default function AdminNewProductPage() {
           description: form.description || undefined,
           descriptionSi: form.descriptionSi || undefined,
           images: imageUrls,
+          certifications: form.certifications,
         }),
       });
 
@@ -106,7 +109,7 @@ export default function AdminNewProductPage() {
       if (res.ok) {
         setSuccess(true);
         setImageUrls([]);
-        setForm({ name: "", nameSi: "", categoryId: "", price: "", originalPrice: "", codAmount: "", codUnit: "per_unit", stock: "0", unit: "piece", unitSi: "කැබැල්ල", description: "", descriptionSi: "" });
+        setForm({ name: "", nameSi: "", categoryId: "", price: "", originalPrice: "", codAmount: "", codUnit: "per_unit", stock: "0", unit: "piece", unitSi: "කැබැල්ල", certifications: [], description: "", descriptionSi: "" });
       } else {
         setError(data.error || "Failed to create product");
       }
@@ -253,6 +256,13 @@ export default function AdminNewProductPage() {
               className="input-field"
             />
           </div>
+        </div>
+
+        <div>
+          <CertificationsInput
+            value={form.certifications}
+            onChange={(certifications) => setForm((prev) => ({ ...prev, certifications }))}
+          />
         </div>
 
         <div>

@@ -28,6 +28,7 @@ export default function ProducerOnboarding() {
     location: "",
     district: "",
     phone: "",
+    businessRegistrationNo: "",
     selectedCategory: "",
     productName: "",
     productNameSi: "",
@@ -167,6 +168,10 @@ export default function ProducerOnboarding() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Phone <span className="text-gray-400">(optional)</span></label>
               <input type="tel" value={form.phone} onChange={(e) => update("phone", e.target.value)} className="input-field" placeholder="+947XXXXXXXX" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Business Registration No. <span className="text-gray-400">(if have)</span></label>
+              <input type="text" value={form.businessRegistrationNo} onChange={(e) => update("businessRegistrationNo", e.target.value)} className="input-field" placeholder="e.g. PV00000000" />
             </div>
           </div>
           <div className="flex justify-end">

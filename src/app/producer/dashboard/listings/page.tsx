@@ -7,6 +7,8 @@ import { isFeatureEnabled } from "@/lib/feature-flags";
 import { CreativeDialog } from "@/components/producer/creative-dialog";
 import { CreativePromptNotice } from "@/components/producer/creative-prompt-notice";
 import { ImageManager } from "@/components/product/image-manager";
+import CertificationsInput, { type CertificationEntry } from "@/components/product/certifications-input";
+import { parseCertifications } from "@/lib/certifications";
 
 type Tab = "manual" | "import";
 
@@ -68,6 +70,7 @@ function ProducerListingsContent() {
     originalPrice: "",
     codAmount: "",
     codUnit: "per_unit",
+    certifications: [] as { type: string; number: string }[],
     unit: "piece",
     unitSi: "කැබැල්ල",
     stock: "",
@@ -126,6 +129,11 @@ function ProducerListingsContent() {
               unitSi: p.unitSi || "කැබැල්ල",
               stock: p.stock != null ? String(p.stock) : "",
               active: p.active !== false,
+              certifications: Array.isArray(p.certifications)
+                ? p.certifications
+                : typeof p.certifications === "string" && p.certifications
+                ? parseCertifications(p.certifications)
+                : [],
               images,
             });
             setTab("manual");
@@ -233,7 +241,7 @@ function ProducerListingsContent() {
           setForm({
             name: "", nameSi: "", description: "", descriptionSi: "",
             categoryId: "", price: "", originalPrice: "", codAmount: "", codUnit: "per_unit", unit: "piece",
-            unitSi: "කැබැල්ල", stock: "", active: true, images: [],
+            unitSi: "කැබැල්ල", stock: "", active: true, images: [], certifications: [],
           });
         } else {
           router.push("/producer/dashboard");
@@ -411,6 +419,13 @@ function ProducerListingsContent() {
                 </select>
               </div>
             </div>
+          </div>
+
+          <div>
+            <CertificationsInput
+              value={form.certifications}
+              onChange={(certifications) => setForm((prev) => ({ ...prev, certifications }))}
+            />
           </div>
 
           <div>

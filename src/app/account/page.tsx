@@ -50,6 +50,7 @@ export default function AccountPage() {
     location: "",
     district: "",
     phone: "",
+    businessRegistrationNo: "",
   });
   const [businessSaving, setBusinessSaving] = useState(false);
   const [businessMsg, setBusinessMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -84,6 +85,7 @@ export default function AccountPage() {
             location: prod.location || "",
             district: prod.district || "",
             phone: prod.phone || "",
+            businessRegistrationNo: prod.businessRegistrationNo || "",
           });
         }
         setLoading(false);
@@ -432,6 +434,17 @@ export default function AccountPage() {
                     required
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Business Registration Number <span className="text-gray-400">(if have)</span></label>
+                <input
+                  type="text"
+                  value={business.businessRegistrationNo}
+                  onChange={(e) => setBusiness((prev) => ({ ...prev, businessRegistrationNo: e.target.value }))}
+                  className="input-field"
+                  placeholder="e.g. PV00000000"
+                />
               </div>
 
               {businessMsg && (

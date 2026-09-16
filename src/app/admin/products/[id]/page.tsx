@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
 import { ImageManager } from "@/components/product/image-manager";
+import CertificationsInput from "@/components/product/certifications-input";
+import { parseCertifications } from "@/lib/certifications";
 
 interface Category {
   id: string;
@@ -39,6 +41,7 @@ export default function AdminEditProductPage() {
     unitSi: "කැබැල්ල",
     description: "",
     descriptionSi: "",
+    certifications: [] as { type: string; number: string }[],
     active: true,
   });
 
@@ -77,6 +80,7 @@ export default function AdminEditProductPage() {
             unitSi: product.unitSi || "කැබැල්ල",
             description: product.description || "",
             descriptionSi: product.descriptionSi || "",
+            certifications: parseCertifications(product.certifications),
             active: product.active !== false,
           });
           setImageUrls(images);
@@ -109,6 +113,7 @@ export default function AdminEditProductPage() {
           originalPrice: form.originalPrice || undefined,
           codAmount: form.codAmount || undefined,
           codUnit: form.codUnit,
+          certifications: form.certifications,
           stock: form.stock,
           unit: form.unit,
           unitSi: form.unitSi,
@@ -276,6 +281,13 @@ export default function AdminEditProductPage() {
             images={imageUrls}
             onChange={setImageUrls}
             productId={productId}
+          />
+        </div>
+
+        <div>
+          <CertificationsInput
+            value={form.certifications}
+            onChange={(certifications) => setForm((prev) => ({ ...prev, certifications }))}
           />
         </div>
 

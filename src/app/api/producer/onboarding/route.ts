@@ -83,6 +83,7 @@ export async function POST(req: NextRequest) {
         location,
         district,
         phone,
+        businessRegistrationNo: String(body.businessRegistrationNo || "").trim() || null,
       },
     });
 

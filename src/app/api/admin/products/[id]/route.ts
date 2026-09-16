@@ -82,6 +82,11 @@ export async function PUT(
     if (body.images !== undefined) {
       data.images = JSON.stringify(Array.isArray(body.images) ? body.images : []);
     }
+    if (body.certifications !== undefined) {
+      data.certifications = JSON.stringify(
+        Array.isArray(body.certifications) ? body.certifications : []
+      );
+    }
     if (body.active !== undefined) data.active = Boolean(body.active);
 
     const product = await prisma.product.update({ where: { id }, data });
