@@ -5,6 +5,17 @@ import { Logo } from "@/components/ui/logo";
 import { ProductImage } from "@/components/product/product-image";
 import { visibleProducerProductWhere, activeMembershipWhere } from "@/lib/producer-membership";
 
+export const dynamic = "force-dynamic";
+
+function shuffle<T>(array: T[]): T[] {
+  const result = [...array];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
 export default function HomePage() {
   const dict = getDictionary("en");
 
@@ -75,20 +86,22 @@ async function FeaturedProducers() {
       },
       include: { user: { select: { name: true } } },
       orderBy: { rating: "desc" },
-      take: 4,
+      take: 12,
     });
   } catch (error) {
     console.error("Failed to fetch producers:", error);
     return <p className="text-gray-500 text-center py-8">Unable to load producers</p>;
   }
 
-  if (producers.length === 0) {
+  const featured = shuffle(producers).slice(0, 4);
+
+  if (featured.length === 0) {
     return <p className="text-gray-500 text-center py-8">No verified producers yet</p>;
   }
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-      {producers.map((producer) => (
+      {featured.map((producer) => (
         <div key={producer.id} className="card p-6">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center text-primary font-bold text-lg">
@@ -121,20 +134,22 @@ async function FeaturedProducts() {
         category: { select: { name: true, nameSi: true } },
       },
       orderBy: { rating: "desc" },
-      take: 8,
+      take: 32,
     });
   } catch (error) {
     console.error("Failed to fetch products:", error);
     return <p className="text-gray-500 text-center py-8">Unable to load products</p>;
   }
 
-  if (products.length === 0) {
+  const featured = shuffle(products).slice(0, 8);
+
+  if (featured.length === 0) {
     return <p className="text-gray-500 text-center py-8">No products yet</p>;
   }
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-      {products.map((product) => (
+      {featured.map((product) => (
         <Link key={product.id} href={`/product/${product.id}`} className="card">
           <ProductImage images={product.images} alt={product.name} />
           <div className="p-4">

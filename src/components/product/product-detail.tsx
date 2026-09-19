@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { getImagesList } from "@/lib/product-images";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import { computeCodFee } from "@/lib/cod-fee";
@@ -275,15 +276,17 @@ export function ProductDetail({ product }: ProductDetailProps) {
 
         <div className="border-t border-gray-100 mt-6 pt-6">
           <h3 className="font-semibold text-gray-900 mb-2">Seller</h3>
-          <div className="flex items-center gap-3">
+          <Link href={`/seller/${product.producer.id}`} className="group flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center text-primary font-bold">
               {product.producer.businessName.charAt(0)}
             </div>
             <div>
-              <p className="font-medium text-gray-900">{product.producer.businessName}</p>
+              <p className="font-medium text-gray-900 group-hover:text-primary group-hover:underline">
+                {product.producer.businessName}
+              </p>
               <p className="text-sm text-gray-500">{product.producer.location}</p>
             </div>
-          </div>
+          </Link>
         </div>
 
         <div className="mt-4">
