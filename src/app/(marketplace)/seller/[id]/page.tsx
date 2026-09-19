@@ -59,9 +59,19 @@ export default async function SellerPage({ params }: Props) {
     producer: { verificationStatus: string };
   }[] = [];
   let ordersServed = 0;
+  let offers: {
+    id: string;
+    title: string;
+    titleSi: string;
+    description: string;
+    descriptionSi: string;
+    discountPercent: number;
+    startDate: Date;
+    endDate: Date;
+  }[] = [];
 
   try {
-    const [reviewData, visibleProducts, servedOrders] = await Promise.all([
+    const [reviewData, visibleProducts, servedOrders, activeOffers] = await Promise.all([
       prisma.review.aggregate({
         where: {
           approved: true,
@@ -90,10 +100,19 @@ export default async function SellerPage({ params }: Props) {
           paymentDone: true,
         },
       }),
+      prisma.offer.findMany({
+        where: {
+          producerId: producer.id,
+          status: "APPROVED",
+          endDate: { gt: new Date() },
+        },
+        orderBy: { createdAt: "desc" },
+      }),
     ]);
     reviewStats = reviewData;
     products = visibleProducts;
     ordersServed = servedOrders;
+    offers = activeOffers;
   } catch (error) {
     console.error("Failed to fetch seller data:", error);
   }
@@ -172,6 +191,35 @@ export default async function SellerPage({ params }: Props) {
           <p className="text-sm text-gray-500">Orders Served</p>
         </div>
       </div>
+
+      {offers.length > 0 && (
+        <div className="mb-12">
+          <h2 className="section-title">Special Offers</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {offers.map((offer) => (
+              <div key={offer.id} className="card overflow-hidden">
+                <div className="bg-gradient-to-br from-primary-500 to-primary-700 text-white p-6">
+                  <p className="text-4xl font-bold">{offer.discountPercent}% OFF</p>
+                  <p className="text-primary-100 mt-1">
+                    {new Date(offer.startDate).toLocaleDateString()} →{" "}
+                    {new Date(offer.endDate).toLocaleDateString()}
+                  </p>
+                </div>
+                <div className="p-5">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    {offer.titleSi || offer.title}
+                  </h3>
+                  {(offer.descriptionSi || offer.description) && (
+                    <p className="text-sm text-gray-600 mt-1 line-clamp-3">
+                      {offer.descriptionSi || offer.description}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div>
         <h2 id="products" className="section-title">Products by {producer.businessName}</h2>

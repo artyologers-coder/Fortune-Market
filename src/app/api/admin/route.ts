@@ -22,12 +22,14 @@ export async function GET() {
       totalOrders,
       pendingVerifications,
       pendingModeration,
+      pendingOffers,
     ] = await Promise.all([
       prisma.producer.count(),
       prisma.product.count(),
       prisma.order.count(),
       prisma.producer.count({ where: { verificationStatus: "PENDING" } }),
       prisma.product.count({ where: { flagged: true } }),
+      prisma.offer.count({ where: { status: "PENDING" } }),
     ]);
 
     return NextResponse.json({
@@ -37,6 +39,7 @@ export async function GET() {
         totalOrders,
         pendingVerifications,
         pendingModeration,
+        pendingOffers,
       },
     });
   } catch (error) {

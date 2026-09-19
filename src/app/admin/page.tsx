@@ -11,6 +11,7 @@ interface Stats {
   totalOrders: number;
   pendingVerifications: number;
   pendingModeration: number;
+  pendingOffers: number;
 }
 
 interface Producer {
@@ -95,6 +96,25 @@ interface AdminUser {
   producer: { id: string; verificationStatus: string; membershipId: string | null } | null;
 }
 
+interface Offer {
+  id: string;
+  title: string;
+  titleSi: string;
+  description: string;
+  descriptionSi: string;
+  discountPercent: number;
+  startDate: string;
+  endDate: string;
+  status: string;
+  createdAt: string;
+  producer: {
+    id: string;
+    businessName: string;
+    businessNameSi: string;
+    user: { name: string };
+  };
+}
+
 interface ResetModalData {
   name: string;
   email: string;
@@ -131,10 +151,11 @@ export default function AdminPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<AdminUser[]>([]);
+  const [offers, setOffers] = useState<Offer[]>([]);
   const [userSearch, setUserSearch] = useState("");
   const [resettingUserId, setResettingUserId] = useState<string | null>(null);
   const [resetModal, setResetModal] = useState<ResetModalData | null>(null);
-  const [activeTab, setActiveTab] = useState<"overview" | "verification" | "memberships" | "moderation" | "products" | "reseller-import" | "reseller-products" | "reseller-settings" | "orders" | "users" | "add-product">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "verification" | "memberships" | "moderation" | "products" | "reseller-import" | "reseller-products" | "reseller-settings" | "orders" | "users" | "offers" | "add-product">("overview");
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -153,13 +174,14 @@ export default function AdminPage() {
 
   async function fetchData() {
     try {
-      const [statsRes, producersRes, productsRes, ordersRes, usersRes, allProducersRes] = await Promise.all([
+      const [statsRes, producersRes, productsRes, ordersRes, usersRes, allProducersRes, offersRes] = await Promise.all([
         fetch("/api/admin"),
         fetch("/api/admin/producers"),
         fetch("/api/admin/products"),
         fetch("/api/orders"),
         fetch("/api/admin/users"),
         fetch("/api/admin/producers?filter=all"),
+        fetch("/api/admin/offers?status=PENDING"),
       ]);
 
       if (statsRes.ok) {
@@ -190,6 +212,11 @@ export default function AdminPage() {
       if (usersRes.ok) {
         const data = await usersRes.json();
         setUsers(data.users || []);
+      }
+
+      if (offersRes.ok) {
+        const data = await offersRes.json();
+        setOffers(data.offers || []);
       }
     } catch {
       console.error("Failed to fetch admin data");
@@ -311,6 +338,25 @@ export default function AdminPage() {
     }
   }
 
+  async function handleOfferAction(offerId: string, action: "approve" | "reject") {
+    const res = await fetch("/api/admin", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action, targetId: offerId, targetType: "offer" }),
+    });
+    if (!res.ok) {
+      alert("Failed to update offer");
+      return;
+    }
+    setOffers((prev) => prev.filter((o) => o.id !== offerId));
+    if (stats) {
+      setStats({
+        ...stats,
+        pendingOffers: Math.max(0, stats.pendingOffers - 1),
+      });
+    }
+  }
+
   async function handleResetPassword(user: AdminUser) {
     if (!confirm(`Reset password for ${user.name || user.email}? The current password will stop working immediately.`)) {
       return;
@@ -357,7 +403,7 @@ export default function AdminPage() {
       <h1 className="text-3xl font-bold text-gray-900 mb-8">Admin Panel</h1>
 
       <div className="flex gap-2 mb-6 border-b border-gray-200">
-        {(["overview", "verification", "memberships", "moderation", "products", "orders", "users", "reseller-import", "reseller-products", "reseller-settings", "add-product"] as const)
+        {(["overview", "verification", "memberships", "moderation", "products", "orders", "users", "offers", "reseller-import", "reseller-products", "reseller-settings", "add-product"] as const)
           .filter((tab) => isFeatureEnabled("COMMISSION_SYSTEM") || !tab.startsWith("reseller-"))
           .map((tab) => (
           <button
@@ -369,18 +415,19 @@ export default function AdminPage() {
                 : "border-transparent text-gray-500 hover:text-gray-700"
             }`}
           >
-            {tab === "overview" ? "Overview" : tab === "verification" ? "Verification" : tab === "memberships" ? "Memberships" : tab === "moderation" ? "Moderation" : tab === "products" ? "Products" : tab === "orders" ? "Orders" : tab === "users" ? "Users" : tab === "reseller-import" ? "Reseller Import" : tab === "reseller-products" ? "Reseller Products" : tab === "reseller-settings" ? "Reseller Settings" : "Add Product"}
+            {tab === "overview" ? "Overview" : tab === "verification" ? "Verification" : tab === "memberships" ? "Memberships" : tab === "moderation" ? "Moderation" : tab === "products" ? "Products" : tab === "orders" ? "Orders" : tab === "users" ? "Users" : tab === "offers" ? "Offers" : tab === "reseller-import" ? "Reseller Import" : tab === "reseller-products" ? "Reseller Products" : tab === "reseller-settings" ? "Reseller Settings" : "Add Product"}
           </button>
         ))}
       </div>
 
       {activeTab === "overview" && stats && (
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
           {[
             { label: "Total Producers", value: stats.totalProducers, color: "text-primary" },
             { label: "Total Products", value: stats.totalProducts, color: "text-primary" },
             { label: "Total Orders", value: stats.totalOrders, color: "text-primary" },
             { label: "Pending Verifications", value: stats.pendingVerifications, color: "text-yellow-600" },
+            { label: "Pending Offers", value: stats.pendingOffers, color: "text-yellow-600" },
             { label: "Flagged Products", value: stats.pendingModeration, color: "text-red-600" },
           ].map((stat) => (
             <div key={stat.label} className="card p-6 text-center">
@@ -955,6 +1002,54 @@ export default function AdminPage() {
                 </tbody>
               </table>
             </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === "offers" && (
+        <div className="space-y-4">
+          {offers.length === 0 ? (
+            <p className="text-center text-gray-500 py-12">No pending offers</p>
+          ) : (
+            offers.map((offer) => (
+              <div key={offer.id} className="card p-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl font-bold text-primary">
+                        {offer.discountPercent}% OFF
+                      </span>
+                      <h3 className="font-bold text-gray-900">{offer.titleSi}</h3>
+                    </div>
+                    <p className="text-sm text-gray-600">{offer.title}</p>
+                    {offer.descriptionSi && (
+                      <p className="text-sm text-gray-500 mt-1 line-clamp-2">{offer.descriptionSi}</p>
+                    )}
+                    <p className="text-xs text-gray-400 mt-1">
+                      By {offer.producer.businessNameSi} ({offer.producer.businessName})
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      {new Date(offer.startDate).toLocaleDateString("en-LK")} →{" "}
+                      {new Date(offer.endDate).toLocaleDateString("en-LK")}
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleOfferAction(offer.id, "approve")}
+                      className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700"
+                    >
+                      Approve
+                    </button>
+                    <button
+                      onClick={() => handleOfferAction(offer.id, "reject")}
+                      className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700"
+                    >
+                      Reject
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))
           )}
         </div>
       )}
