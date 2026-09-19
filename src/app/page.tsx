@@ -7,6 +7,8 @@ import { visibleProducerProductWhere, activeMembershipWhere } from "@/lib/produc
 
 export const dynamic = "force-dynamic";
 
+const CATEGORY_SLUGS = ["foods", "crafts", "naturals", "fashion"];
+
 function shuffle<T>(array: T[]): T[] {
   const result = [...array];
   for (let i = result.length - 1; i > 0; i--) {
@@ -34,7 +36,9 @@ export default function HomePage() {
       </section>
 
       <section className="page-container">
-        <h2 className="section-title text-center">{dict.categories.title}</h2>
+        <Link href={`/category/${CATEGORY_SLUGS[0]}`}>
+          <h2 className="section-title text-center hover:text-primary">{dict.categories.title}</h2>
+        </Link>
         <CategoryCards dict={dict} />
       </section>
 
@@ -44,7 +48,7 @@ export default function HomePage() {
       </section>
 
       <section className="page-container">
-        <h2 className="section-title">{dict.common.verified} {dict.categories.title}</h2>
+        <h2 className="section-title">{dict.categories.verifiedProducers}</h2>
         <FeaturedProducers />
       </section>
     </div>
@@ -102,7 +106,7 @@ async function FeaturedProducers() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
       {featured.map((producer) => (
-        <div key={producer.id} className="card p-6">
+        <Link key={producer.id} href={`/seller/${producer.id}`} className="card p-6 hover:scale-[1.02] transition-transform">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center text-primary font-bold text-lg">
               {producer.businessName.charAt(0)}
@@ -118,7 +122,7 @@ async function FeaturedProducers() {
             <span className="font-medium">{producer.rating.toFixed(1)}</span>
             <span className="text-gray-400">({producer.totalReviews})</span>
           </div>
-        </div>
+        </Link>
       ))}
     </div>
   );

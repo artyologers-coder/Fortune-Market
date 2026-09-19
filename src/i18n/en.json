@@ -24,10 +24,11 @@
     "crafts": "Fortune Crafts",
     "naturals": "Fortune Naturals",
     "fashion": "Fortune Fashion",
-    "foodsDesc": "Natural food products",
-    "craftsDesc": "Handcrafted goods",
+"foodsDesc": "Natural food products",
+    "craftsDesc": "Handmade crafts",
     "naturalsDesc": "Natural products",
-    "fashionDesc": "Local fashion"
+    "fashionDesc": "Local fashion",
+    "verifiedProducers": "Verified Producers"
   },
   "product": {
     "title": "Product",
