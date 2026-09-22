@@ -130,7 +130,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { name, nameSi, categoryId, price, originalPrice, codAmount, codUnit, codUnitsPerKg, stock, unit, unitSi, description, descriptionSi, images, certifications } = body;
+    const { name, nameSi, categoryId, price, originalPrice, codAmount, codUnit, codUnitsPerKg, codAdditionalKgRate, stock, unit, unitSi, description, descriptionSi, images, certifications } = body;
 
     if (!name || !categoryId || !price) {
       return NextResponse.json({ error: "Name, category, and price are required" }, { status: 400 });
@@ -157,6 +157,7 @@ export async function POST(req: NextRequest) {
         codAmount: codAmount ? parseFloat(codAmount) : null,
         codUnit: codUnit || null,
         codUnitsPerKg: codUnitsPerKg ? parseFloat(codUnitsPerKg) : null,
+        codAdditionalKgRate: codAdditionalKgRate ? parseFloat(codAdditionalKgRate) : null,
         unit: unit || "piece",
         unitSi: unitSi || "කැබැල්ල",
         images: JSON.stringify(images || []),

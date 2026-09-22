@@ -71,6 +71,7 @@ function ProducerListingsContent() {
     codAmount: "",
     codUnit: "per_unit",
     codUnitsPerKg: "",
+    codAdditionalKgRate: "",
     certifications: [] as { type: string; number: string }[],
     unit: "piece",
     unitSi: "කැබැල්ල",
@@ -127,6 +128,7 @@ function ProducerListingsContent() {
               codAmount: p.codAmount != null ? String(p.codAmount) : "",
               codUnit: p.codUnit || "per_unit",
               codUnitsPerKg: p.codUnitsPerKg != null ? String(p.codUnitsPerKg) : "",
+              codAdditionalKgRate: p.codAdditionalKgRate != null ? String(p.codAdditionalKgRate) : "",
               unit: p.unit || "piece",
               unitSi: p.unitSi || "කැබැල්ල",
               stock: p.stock != null ? String(p.stock) : "",
@@ -242,7 +244,7 @@ function ProducerListingsContent() {
         if (!editing) {
           setForm({
             name: "", nameSi: "", description: "", descriptionSi: "",
-            categoryId: "", price: "", originalPrice: "", codAmount: "", codUnit: "per_unit", codUnitsPerKg: "", unit: "piece",
+            categoryId: "", price: "", originalPrice: "", codAmount: "", codUnit: "per_unit", codUnitsPerKg: "", codAdditionalKgRate: "", unit: "piece",
             unitSi: "කැබැල්ල", stock: "", active: true, images: [], certifications: [],
           });
         } else {
@@ -412,7 +414,7 @@ function ProducerListingsContent() {
             <label className="block text-sm font-medium text-gray-700 mb-1">Islandwide Cash On Delivery (Rs.)</label>
             <div className="grid grid-cols-2 sm:grid-cols-2 gap-4">
               <div>
-                <input type="number" value={form.codAmount} onChange={(e) => update("codAmount", e.target.value)} className="input-field" min="0" step="0.01" placeholder="0.00" />
+                <input type="number" value={form.codAmount} onChange={(e) => update("codAmount", e.target.value)} className="input-field" min="0" step="0.01" placeholder={form.codUnit === "per_kg" ? "First 1 kg" : "0.00"} />
               </div>
               <div>
                 <select value={form.codUnit} onChange={(e) => update("codUnit", e.target.value)} className="input-field">
@@ -421,6 +423,20 @@ function ProducerListingsContent() {
                 </select>
               </div>
             </div>
+            {form.codUnit === "per_kg" && (
+              <div className="mt-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Additional Kg Rate (Rs.) — leave blank for a flat rate</label>
+                <input
+                  type="number"
+                  value={form.codAdditionalKgRate}
+                  onChange={(e) => update("codAdditionalKgRate", e.target.value)}
+                  className="input-field"
+                  min="0"
+                  step="0.01"
+                  placeholder="e.g. 100"
+                />
+              </div>
+            )}
             {form.codUnit === "per_kg" && (
               <div className="mt-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Units per 1 Kg (after packaging)</label>

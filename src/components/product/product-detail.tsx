@@ -22,6 +22,7 @@ interface ProductDetailProps {
     codAmount: number | null;
     codUnit: string | null;
     codUnitsPerKg: number | null;
+    codAdditionalKgRate: number | null;
     unit: string;
     unitSi: string;
     stock: number;
@@ -184,7 +185,9 @@ export function ProductDetail({ product }: ProductDetailProps) {
               <span className="text-sm font-medium text-gray-700">
                 Islandwide Delivery: Rs. {product.codAmount}
                 {product.codUnit === "per_kg"
-                  ? ` / kg${product.codUnitsPerKg ? ` (${product.codUnitsPerKg} ${product.unit} = 1 kg)` : ""}`
+                  ? product.codAdditionalKgRate
+                    ? ` first kg + Rs. ${product.codAdditionalKgRate} / additional kg${product.codUnitsPerKg ? ` (${product.codUnitsPerKg} ${product.unit} = 1 kg)` : ""}`
+                    : ` / kg${product.codUnitsPerKg ? ` (${product.codUnitsPerKg} ${product.unit} = 1 kg)` : ""}`
                   : ` / ${product.unit}`}
               </span>
             </div>

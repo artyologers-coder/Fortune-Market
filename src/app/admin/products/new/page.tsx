@@ -33,6 +33,7 @@ export default function AdminNewProductPage() {
     codAmount: "",
     codUnit: "per_unit",
     codUnitsPerKg: "",
+    codAdditionalKgRate: "",
     stock: "0",
     unit: "piece",
     unitSi: "කැබැල්ල",
@@ -96,6 +97,7 @@ export default function AdminNewProductPage() {
           codAmount: form.codAmount || undefined,
           codUnit: form.codUnit,
           codUnitsPerKg: form.codUnitsPerKg || undefined,
+          codAdditionalKgRate: form.codAdditionalKgRate || undefined,
           stock: form.stock || undefined,
           unit: form.unit || undefined,
           unitSi: form.unitSi || undefined,
@@ -111,7 +113,7 @@ export default function AdminNewProductPage() {
       if (res.ok) {
         setSuccess(true);
         setImageUrls([]);
-        setForm({ name: "", nameSi: "", categoryId: "", price: "", originalPrice: "", codAmount: "", codUnit: "per_unit", codUnitsPerKg: "", stock: "0", unit: "piece", unitSi: "කැබැල්ල", certifications: [], description: "", descriptionSi: "" });
+        setForm({ name: "", nameSi: "", categoryId: "", price: "", originalPrice: "", codAmount: "", codUnit: "per_unit", codUnitsPerKg: "", codAdditionalKgRate: "", stock: "0", unit: "piece", unitSi: "කැබැල්ල", certifications: [], description: "", descriptionSi: "" });
       } else {
         setError(data.error || "Failed to create product");
       }
@@ -214,7 +216,7 @@ export default function AdminNewProductPage() {
               className="input-field"
               min="0"
               step="0.01"
-              placeholder="0.00"
+              placeholder={form.codUnit === "per_kg" ? "First 1 kg" : "0.00"}
             />
             <select
               value={form.codUnit}
@@ -225,6 +227,20 @@ export default function AdminNewProductPage() {
               <option value="per_kg">Per 1 Kg</option>
             </select>
           </div>
+          {form.codUnit === "per_kg" && (
+            <div className="mt-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Additional Kg Rate (Rs.) — leave blank for a flat rate</label>
+              <input
+                type="number"
+                value={form.codAdditionalKgRate}
+                onChange={(e) => update("codAdditionalKgRate", e.target.value)}
+                className="input-field"
+                min="0"
+                step="0.01"
+                placeholder="e.g. 100"
+              />
+            </div>
+          )}
           {form.codUnit === "per_kg" && (
             <div className="mt-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">Units per 1 Kg (after packaging)</label>

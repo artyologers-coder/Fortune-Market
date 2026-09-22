@@ -90,9 +90,10 @@ model Product {
   descriptionSi String
   price         Float
   originalPrice Float?
-  codAmount     Float?
-  codUnit       String?
-  codUnitsPerKg Float?
+  codAmount          Float?
+  codUnit            String?
+  codUnitsPerKg      Float?
+  codAdditionalKgRate Float?
   certifications String  @default("[]")
   unit          String
   unitSi        String

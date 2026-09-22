@@ -16,6 +16,7 @@ interface CartProduct {
   codAmount: number | null;
   codUnit: string | null;
   codUnitsPerKg: number | null;
+  codAdditionalKgRate: number | null;
   producer?: {
     id: string;
     businessName: string;
