@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/prisma";
-import { activateMembership, renewMembership } from "@/lib/producer-membership";
+import { renewMembership } from "@/lib/producer-membership";
 
 export async function GET() {
   try {
@@ -66,11 +66,18 @@ export async function PATCH(req: NextRequest) {
 
     if (targetType === "producer") {
       if (action === "approve") {
-        await prisma.producer.update({
-          where: { id: targetId },
-          data: { verificationStatus: "APPROVED", verifiedAt: new Date() },
-        });
-        updatedProducer = await activateMembership(targetId);
+        // Producer approval now has to clear the registration payment, grant
+        // the membership and create the representative's commission in ONE
+        // transaction, and it has to be addressed by payment id rather than
+        // producer id. The old bare update is gone; this points at the gate
+        // instead of silently doing a partial job.
+        return NextResponse.json(
+          {
+            error:
+              "Producer approval must go through the registration payment gate so the payment, membership and commission stay consistent. Use POST /api/admin/producer-registrations/{paymentId}?action=approve",
+          },
+          { status: 410 }
+        );
       } else if (action === "renew") {
         updatedProducer = await renewMembership(targetId);
       } else if (action === "reject") {

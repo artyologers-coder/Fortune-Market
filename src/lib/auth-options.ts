@@ -18,13 +18,25 @@ export const authOptions: NextAuthOptions = {
 
         const user = await prisma.user.findUnique({
           where: { email: credentials.email },
-          include: { producer: true },
+          include: { producer: true, representative: true },
         });
 
         if (!user) return null;
 
         const isValid = await compare(credentials.password, user.passwordHash);
         if (!isValid) return null;
+
+        // A representative account exists only once an admin approves an
+        // application. Someone who applied but has not been approved has a
+        // REPRESENTATIVE role with no Representative row, and must not be able
+        // to sign in and reach the dashboard.
+        if (user.role === "REPRESENTATIVE") {
+          if (!user.representative) return null;
+          // SUSPENDED is deliberately allowed through: a suspended
+          // representative keeps read access to their own records and
+          // commission history. Only a closed account is refused.
+          if (user.representative.status === "INACTIVE") return null;
+        }
 
         return {
           id: user.id,
@@ -35,6 +47,8 @@ export const authOptions: NextAuthOptions = {
           phoneVerified: user.phoneVerified,
           producerId: user.producer?.id ?? null,
           verifiedProducer: user.producer?.verificationStatus === "APPROVED",
+          representativeId: user.representative?.id ?? null,
+          representativeStatus: user.representative?.status ?? null,
         };
       },
     }),
@@ -47,6 +61,8 @@ export const authOptions: NextAuthOptions = {
         token.phoneVerified = user.phoneVerified;
         token.producerId = user.producerId;
         token.verifiedProducer = user.verifiedProducer;
+        token.representativeId = user.representativeId;
+        token.representativeStatus = user.representativeStatus;
       }
       return token;
     },
@@ -58,6 +74,8 @@ export const authOptions: NextAuthOptions = {
         session.user.phoneVerified = token.phoneVerified;
         session.user.producerId = token.producerId;
         session.user.verifiedProducer = token.verifiedProducer;
+        session.user.representativeId = token.representativeId;
+        session.user.representativeStatus = token.representativeStatus;
 
         const id = token.sub;
         if (id) {

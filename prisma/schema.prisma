@@ -19,13 +19,16 @@ model User {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  producer           Producer?
-  orders             Order[]
-  reviews            Review[]
-  reports            Report[]
-  buyerConversations Conversation[] @relation("ConversationBuyer")
-  adminConversations Conversation[] @relation("ConversationAdmin")
-  sentMessages       Message[]      @relation("SentMessages")
+  producer                  Producer?
+  representative            Representative?
+  representativeApplication RepresentativeApplication?
+  orders                    Order[]
+  reviews                   Review[]
+  reports                   Report[]
+  notifications             Notification[]
+  buyerConversations        Conversation[]             @relation("ConversationBuyer")
+  adminConversations        Conversation[]             @relation("ConversationAdmin")
+  sentMessages              Message[]                  @relation("SentMessages")
 }
 
 model OtpCode {
@@ -38,103 +41,106 @@ model OtpCode {
 }
 
 model Producer {
-  id                 String    @id @default(cuid())
-  userId             String    @unique
-  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  businessName       String
-  businessNameSi     String
-  description        String?
-  descriptionSi      String?
-  location           String
-  district           String
-  phone              String
+  id                     String    @id @default(cuid())
+  userId                 String    @unique
+  user                   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessName           String
+  businessNameSi         String
+  description            String?
+  descriptionSi          String?
+  location               String
+  district               String
+  phone                  String
   businessRegistrationNo String?
-  membershipId       String?   @unique
-  membershipActivatedAt DateTime?
-  membershipExpiresAt DateTime?
-  verificationStatus String    @default("PENDING")
-  verifiedAt         DateTime?
-  rating             Float     @default(0)
-  totalReviews       Int       @default(0)
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  membershipId           String?   @unique
+  membershipActivatedAt  DateTime?
+  membershipExpiresAt    DateTime?
+  verificationStatus     String    @default("PENDING")
+  verifiedAt             DateTime?
+  rating                 Float     @default(0)
+  totalReviews           Int       @default(0)
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
 
-  products           Product[]
-  offers             Offer[]
-  conversations      Conversation[]
+  products             Product[]
+  offers               Offer[]
+  conversations        Conversation[]
+  referral             ProducerReferral?
+  registrationPayments ProducerRegistrationPayment[]
+  commissions          RepresentativeCommission[]
 }
 
 model Category {
-  id                String   @id @default(cuid())
-  name              String
-  nameSi            String
-  slug              String   @unique
-  description       String?
-  descriptionSi     String?
-  image             String?
-  markupPercentage  Float    @default(15)
-  createdAt         DateTime @default(now())
+  id               String   @id @default(cuid())
+  name             String
+  nameSi           String
+  slug             String   @unique
+  description      String?
+  descriptionSi    String?
+  image            String?
+  markupPercentage Float    @default(15)
+  createdAt        DateTime @default(now())
 
-  products          Product[]
+  products Product[]
 }
 
 model Product {
-  id            String   @id @default(cuid())
-  producerId    String
-  producer      Producer @relation(fields: [producerId], references: [id], onDelete: Cascade)
-  categoryId    String
-  category      Category @relation(fields: [categoryId], references: [id])
-  name          String
-  nameSi        String
-  description   String
-  descriptionSi String
-  price         Float
-  originalPrice Float?
-  codAmount          Float?
-  codUnit            String?
-  codUnitsPerKg      Float?
+  id                  String    @id @default(cuid())
+  producerId          String
+  producer            Producer  @relation(fields: [producerId], references: [id], onDelete: Cascade)
+  categoryId          String
+  category            Category  @relation(fields: [categoryId], references: [id])
+  name                String
+  nameSi              String
+  description         String
+  descriptionSi       String
+  price               Float
+  originalPrice       Float?
+  codAmount           Float?
+  codUnit             String?
+  codUnitsPerKg       Float?
   codAdditionalKgRate Float?
-  certifications String  @default("[]")
-  unit          String
-  unitSi        String
-  images        String   @default("[]")
-  stock         Int      @default(0)
-  rating        Float    @default(0)
-  totalReviews  Int      @default(0)
-  active        Boolean  @default(true)
-  flagged       Boolean  @default(false)
-  sourceUrl     String?
-  sourceSite    String?
-  lastSyncAt    DateTime?
-  syncStatus    String?  @default("paused")
-  externalPrice Float?
-  externalStock String?
-  slug          String?  @unique
-  brandLogoUrl  String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  certifications      String    @default("[]")
+  unit                String
+  unitSi              String
+  images              String    @default("[]")
+  stock               Int       @default(0)
+  rating              Float     @default(0)
+  totalReviews        Int       @default(0)
+  active              Boolean   @default(true)
+  flagged             Boolean   @default(false)
+  sourceUrl           String?
+  sourceSite          String?
+  lastSyncAt          DateTime?
+  syncStatus          String?   @default("paused")
+  externalPrice       Float?
+  externalStock       String?
+  slug                String?   @unique
+  brandLogoUrl        String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
-  orderItems    OrderItem[]
-  reviews       Review[]
-  reports       Report[]
-  syncLogs      StockSyncLog[]
+  orderItems     OrderItem[]
+  reviews        Review[]
+  reports        Report[]
+  syncLogs       StockSyncLog[]
   resellerSource ResellerSource?
-  conversations Conversation[]
-  creative      ProductCreative?
+  conversations  Conversation[]
+  creative       ProductCreative?
 }
 
 model ProductCreative {
-  id         String   @id @default(cuid())
-  productId  String   @unique
-  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  id         String    @id @default(cuid())
+  productId  String    @unique
+  product    Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
   imageUrl   String
-  status     String   @default("PENDING") // PENDING, ACTIVE
-  version    Int      @default(1)
-  createdAt  DateTime @default(now())
+  status     String    @default("PENDING") // PENDING, ACTIVE
+  version    Int       @default(1)
+  createdAt  DateTime  @default(now())
   approvedAt DateTime?
-  updatedAt  DateTime @updatedAt
+  updatedAt  DateTime  @updatedAt
 
-  shares     CreativeShare[]
+  shares CreativeShare[]
 }
 
 model CreativeShare {
@@ -159,55 +165,55 @@ model StockSyncLog {
 }
 
 model ResellerSource {
-  id              String   @id @default(cuid())
-  productId       String   @unique
-  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  sourceUrl       String
-  sourceDomain    String
-  sourceName      String?
-  sourcePrice     Float
-  sourceStock     Int?
-  sourceStatus    String   @default("ACTIVE") // ACTIVE, OUT_OF_STOCK, UNREACHABLE, REMOVED
-  sourceRawData   String?
-  lastScrapedAt   DateTime?
-  lastSyncError   String?
-  syncFailCount   Int      @default(0)
-  requiresReview  Boolean  @default(false)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id             String    @id @default(cuid())
+  productId      String    @unique
+  product        Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  sourceUrl      String
+  sourceDomain   String
+  sourceName     String?
+  sourcePrice    Float
+  sourceStock    Int?
+  sourceStatus   String    @default("ACTIVE") // ACTIVE, OUT_OF_STOCK, UNREACHABLE, REMOVED
+  sourceRawData  String?
+  lastScrapedAt  DateTime?
+  lastSyncError  String?
+  syncFailCount  Int       @default(0)
+  requiresReview Boolean   @default(false)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 }
 
 model ScraperDomainProfile {
-  id                     String   @id @default(cuid())
-  domain                 String   @unique
-  strategy               String   @default("json-ld")
+  id                     String    @id @default(cuid())
+  domain                 String    @unique
+  strategy               String    @default("json-ld")
   selectorConfig         String?
-  requiresJsRender       Boolean  @default(true)
+  requiresJsRender       Boolean   @default(true)
   supplierWhatsAppNumber String?
   lastVerifiedAt         DateTime?
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
 }
 
 model Order {
-  id                     String   @id @default(cuid())
-  userId                 String
-  user                   User     @relation(fields: [userId], references: [id])
-  status                 String   @default("PENDING")
-  totalAmount            Float
-  paymentMethod          String
-  paymentDone            Boolean  @default(false)
-  shippingName           String
-  shippingPhone          String
-  shippingAddress        String
-  shippingCity           String
-  notes                  String?
-  forwardedToSupplierAt  DateTime?
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
+  id                    String    @id @default(cuid())
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id])
+  status                String    @default("PENDING")
+  totalAmount           Float
+  paymentMethod         String
+  paymentDone           Boolean   @default(false)
+  shippingName          String
+  shippingPhone         String
+  shippingAddress       String
+  shippingCity          String
+  notes                 String?
+  forwardedToSupplierAt DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 
-  items                  OrderItem[]
-  conversations          Conversation[]
+  items         OrderItem[]
+  conversations Conversation[]
 }
 
 model OrderItem {
@@ -284,14 +290,490 @@ model Conversation {
 }
 
 model Message {
-  id             String   @id @default(cuid())
+  id             String       @id @default(cuid())
   conversationId String
   senderId       String
   body           String
   readAt         DateTime?
-  createdAt      DateTime @default(now())
+  createdAt      DateTime     @default(now())
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  sender         User     @relation("SentMessages", fields: [senderId], references: [id])
+  sender         User         @relation("SentMessages", fields: [senderId], references: [id])
 
   @@index([conversationId, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Producer Acquisition Representatives
+// ---------------------------------------------------------------------------
+
+/// A person who applied to become a Producer Acquisition Representative.
+/// Applications are created by the public; a `Representative` record only
+/// exists after an admin approves the application.
+model RepresentativeApplication {
+  id              String @id @default(cuid())
+  applicationCode String @unique
+  userId          String @unique
+  user            User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Personal information
+  fullName    String
+  nic         String?
+  dateOfBirth DateTime?
+  phone       String
+  whatsapp    String?
+  email       String
+  address     String?
+  district    String
+  province    String?
+
+  // Work information
+  preferredArea     String?
+  coverageAreas     String  @default("[]")
+  experience        String?
+  occupation        String?
+  socialProfileLink String?
+
+  // Bank / payment information
+  bankName           String?
+  bankAccountName    String?
+  bankAccountNumber  String?
+  bankBranch         String?
+  paymentMethodNotes String?
+
+  // Agreements (all four must be true before submission)
+  agreedTerms       Boolean   @default(false)
+  agreedCommission  Boolean   @default(false)
+  agreedPrivacy     Boolean   @default(false)
+  confirmedAccurate Boolean   @default(false)
+  agreementsAt      DateTime?
+
+  // Review workflow
+  status           String    @default("PENDING") // PENDING, UNDER_REVIEW, APPROVED, REJECTED, SUSPENDED, INACTIVE
+  reviewNotes      String?
+  infoRequestNote  String?
+  infoRequestedAt  DateTime?
+  reviewedAt       DateTime?
+  reviewedById     String?
+  // 1:1 with the Representative created on approval.
+  representativeId String?   @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  representative Representative? @relation(fields: [representativeId], references: [id])
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([district])
+}
+
+/// An approved representative. `code` is the permanent public identifier
+/// (FM-REP-00001) and is also the referral code used in producer signup links.
+model Representative {
+  id     String @id @default(cuid())
+  code   String @unique
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  fullName    String
+  nic         String?
+  dateOfBirth DateTime?
+  phone       String
+  whatsapp    String?
+  email       String
+  address     String?
+  district    String
+  province    String?
+  avatar      String?
+
+  // Work information
+  preferredArea     String?
+  coverageAreas     String  @default("[]")
+  experience        String?
+  occupation        String?
+  socialProfileLink String?
+
+  // Bank / payment information (never returned unmasked in list views)
+  bankName           String?
+  bankAccountName    String?
+  bankAccountNumber  String?
+  bankBranch         String?
+  paymentMethodNotes String?
+
+  // Admin-assigned working area (organisational only — does not block
+  // registering producers outside the area)
+  assignedCity String?
+  assignedArea String?
+
+  status          String    @default("ACTIVE") // ACTIVE, SUSPENDED, INACTIVE
+  statusReason    String?
+  statusChangedAt DateTime?
+  joinedAt        DateTime  @default(now())
+  approvedAt      DateTime?
+  approvedById    String?
+  suspendedAt     DateTime?
+  deactivatedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  application RepresentativeApplication?
+  leads       RepresentativeLead[]
+  referrals   ProducerReferral[]
+  commissions RepresentativeCommission[]
+  payouts     CommissionPayout[]
+  auditLogs   RepresentativeAuditLog[]
+
+  @@index([status])
+  @@index([district])
+  @@index([phone])
+}
+
+/// A prospective producer the representative has met but who has not yet
+/// registered. Leads convert to a `ProducerReferral` when the producer
+/// registers through the representative's link.
+model RepresentativeLead {
+  id               String         @id @default(cuid())
+  leadCode         String         @unique
+  representativeId String
+  representative   Representative @relation(fields: [representativeId], references: [id], onDelete: Cascade)
+
+  producerName    String?
+  contactName     String
+  phone           String
+  whatsapp        String?
+  email           String?
+  district        String
+  area            String?
+  productCategory String?
+  notes           String?
+
+  status String @default("NEW") // NEW, CONTACTED, INTERESTED, REGISTRATION_STARTED, REGISTERED, PAYMENT_PENDING, PAYMENT_CONFIRMED, APPROVED, REJECTED, NOT_INTERESTED, DUPLICATE
+
+  // Payment-derived statuses are set by the payment/admin flow, never by the
+  // representative. `statusLocked` marks a lead whose status is system-owned.
+  statusLocked Boolean @default(false)
+
+  duplicateSuspect      Boolean @default(false)
+  duplicateOfProducerId String?
+  duplicateNote         String?
+
+  producerId  String?
+  contactedAt DateTime?
+  convertedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([representativeId, status])
+  @@index([representativeId, createdAt])
+  @@index([phone])
+}
+
+/// The locked attribution of a producer to a representative. Created in the
+/// same transaction that creates the Producer, then immediately locked.
+model ProducerReferral {
+  id               String         @id @default(cuid())
+  producerId       String         @unique
+  // No cascade: deleting a producer must never erase the fact that they were
+  // referred (and would silently orphan a commission ledger).
+  producer         Producer       @relation(fields: [producerId], references: [id])
+  representativeId String
+  representative   Representative @relation(fields: [representativeId], references: [id])
+  leadId           String?
+
+  referralCode String
+  source       String @default("LINK") // LINK, QR, MANUAL, ADMIN
+  status       String @default("ACTIVE") // ACTIVE, REVERSED, CANCELLED
+
+  referredAt DateTime  @default(now())
+  lockedAt   DateTime?
+
+  changedById              String?
+  changeReason             String?
+  previousRepresentativeId String?
+  reversedAt               DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([representativeId])
+  @@index([status])
+}
+
+/// The producer's annual registration fee. `amount` is a snapshot taken at
+/// registration time so later settings changes never rewrite history.
+/// `feeRequired` records why the fee applies — a referred producer always
+/// pays; an unreferred producer is only charged once the gate is closed.
+model ProducerRegistrationPayment {
+  id         String   @id @default(cuid())
+  producerId String
+  producer   Producer @relation(fields: [producerId], references: [id])
+
+  kind     String @default("INITIAL") // INITIAL, RENEWAL
+  amount   Int
+  currency String @default("LKR")
+
+  status String @default("PENDING") // PENDING, PAID, WAIVED, FAILED, CANCELLED, REFUNDED, UNDER_REVIEW
+  method String @default("BANK_TRANSFER") // BANK_TRANSFER, CARD, GATEWAY, CASH
+
+  feeRequired Boolean @default(true)
+  feeBasis    String? // REFERRAL, GATE_ENFORCED
+  reference   String?
+  notes       String?
+
+  paidAt       DateTime?
+  verifiedById String?
+  verifiedAt   DateTime?
+
+  waivedAt    DateTime?
+  waivedById  String?
+  waiveReason String?
+
+  refundedAt       DateTime?
+  refundReason     String?
+  renewedPaymentId String?   @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  commissions RepresentativeCommission[]
+
+  @@index([producerId, status])
+  @@index([status])
+  @@index([kind])
+}
+
+/// A representative's earning for one successfully acquired producer.
+/// `amount` is a snapshot from settings at the moment the commission was
+/// created and is never re-read, so it cannot be changed after the fact.
+model RepresentativeCommission {
+  id                    String                       @id @default(cuid())
+  commissionCode        String                       @unique
+  representativeId      String
+  representative        Representative               @relation(fields: [representativeId], references: [id])
+  producerId            String
+  producer              Producer                     @relation(fields: [producerId], references: [id])
+  registrationPaymentId String?
+  registrationPayment   ProducerRegistrationPayment? @relation(fields: [registrationPaymentId], references: [id])
+
+  kind     String @default("INITIAL") // INITIAL, RENEWAL
+  amount   Int
+  currency String @default("LKR")
+
+  status String @default("PENDING") // PENDING, ELIGIBLE, APPROVED, PAYABLE, PAID, CANCELLED, REVERSED
+
+  eligibleAt   DateTime?
+  approvedAt   DateTime?
+  approvedById String?
+  paidAt       DateTime?
+
+  paymentReference String?
+  paymentMethod    String?
+  paidById         String?
+
+  cancelledAt        DateTime?
+  cancellationReason String?
+
+  reversalOfId   String?   @unique
+  reversedAt     DateTime?
+  reversalReason String?
+
+  flagged    Boolean @default(false)
+  flagReason String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // One-to-many, not one-to-one: a commission may pass through more than one
+  // payout over its life (a failed payout, then a cancelled one, then the one
+  // that actually went out). What must never happen is two *active* payouts
+  // holding the same commission, and that is enforced by every query going
+  // through ACTIVE_PAYOUT_STATUSES rather than by a unique index here.
+  payoutItems CommissionPayoutItem[]
+
+  // One INITIAL and one RENEWAL commission per producer. A plain
+  // `producerId @unique` would make a second (renewal) commission impossible.
+  @@unique([producerId, kind])
+  @@index([representativeId, status])
+  @@index([status])
+}
+
+/// A batch of commission payments made to one representative.
+model CommissionPayout {
+  id               String         @id @default(cuid())
+  payoutCode       String         @unique
+  representativeId String
+  representative   Representative @relation(fields: [representativeId], references: [id])
+
+  amount   Int
+  currency String @default("LKR")
+  status   String @default("PENDING") // PENDING, PAID, FAILED, CANCELLED
+  method   String @default("BANK_TRANSFER")
+
+  reference     String?
+  note          String?
+  paidAt        DateTime?
+  processedById String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items CommissionPayoutItem[]
+
+  @@index([representativeId, status])
+}
+
+model CommissionPayoutItem {
+  id           String                   @id @default(cuid())
+  payoutId     String
+  payout       CommissionPayout         @relation(fields: [payoutId], references: [id], onDelete: Cascade)
+  commissionId String
+  commission   RepresentativeCommission @relation(fields: [commissionId], references: [id], onDelete: Cascade)
+  amount       Int
+
+  createdAt DateTime @default(now())
+
+  // Deliberately NOT `@unique` on commissionId alone. That would mean a
+  // commission could ever appear in exactly one payout, so cancelling or failing
+  // a payout would strand its commissions permanently — the representative would
+  // have earned money that no longer matched any filter and could never be paid.
+  //
+  // Instead a commission is reserved by at most one payout *item per payout*,
+  // and "reserved" is derived from the parent payout's status: only PENDING and
+  // PAID payouts hold their commissions. See ACTIVE_PAYOUT_STATUSES in
+  // src/lib/commission.ts, which every query must go through.
+  @@unique([commissionId, payoutId])
+  @@index([commissionId])
+  @@index([payoutId])
+}
+
+/// Append-only audit trail for every financially or permission-significant
+/// action in the representative system. Never editable by representatives.
+model RepresentativeAuditLog {
+  id        String  @id @default(cuid())
+  actorId   String?
+  actorRole String?
+
+  action     String
+  entityType String
+  entityId   String?
+
+  representativeId String?
+  representative   Representative? @relation(fields: [representativeId], references: [id], onDelete: SetNull)
+
+  previousValue String?
+  newValue      String?
+  metadata      String?
+
+  createdAt DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([representativeId, createdAt])
+  @@index([action])
+}
+
+/// Singleton row. `id` is always "singleton".
+model RepresentativeSettings {
+  id String @id @default("singleton")
+
+  // Financial split — validated so that
+  // producerAnnualRegistrationFee === representativeInitialCommission + fortuneMarketInitialAllocation
+  producerAnnualRegistrationFee   Int @default(1200)
+  representativeInitialCommission Int @default(700)
+  fortuneMarketInitialAllocation  Int @default(500)
+
+  // Year-2+ policy. Renewal commission is opt-in and never automatic.
+  renewalCommissionEnabled Boolean @default(false)
+  renewalCommissionAmount  Int     @default(0)
+
+  // Fee gate. AUTO follows feeEnforcementStartsAt; the FORCE_* modes override it.
+  feeEnforcementMode     String    @default("FORCE_OPEN") // AUTO, FORCE_OPEN, FORCE_CLOSED
+  feeEnforcementStartsAt DateTime?
+  initialProducerTarget  Int?
+
+  currency String @default("LKR")
+
+  updatedAt   DateTime @updatedAt
+  updatedById String?
+
+  revisions RepresentativeSettingsRevision[]
+}
+
+/// Append-only history of every settings change, so the price in force on a
+/// given date can always be reconstructed.
+model RepresentativeSettingsRevision {
+  id         String                 @id @default(cuid())
+  settingsId String
+  settings   RepresentativeSettings @relation(fields: [settingsId], references: [id], onDelete: Cascade)
+
+  producerAnnualRegistrationFee   Int
+  representativeInitialCommission Int
+  fortuneMarketInitialAllocation  Int
+  renewalCommissionEnabled        Boolean
+  renewalCommissionAmount         Int
+  feeEnforcementMode              String
+  feeEnforcementStartsAt          DateTime?
+  initialProducerTarget           Int?
+
+  reason      String
+  changedById String?
+
+  createdAt DateTime @default(now())
+
+  @@index([settingsId, createdAt])
+}
+
+/// Admin-editable Representative training / guide content.
+model RepresentativeGuideSection {
+  id        String  @id @default(cuid())
+  slug      String  @unique
+  title     String
+  body      String
+  sortOrder Int     @default(0)
+  visible   Boolean @default(true)
+
+  updatedAt   DateTime @updatedAt
+  updatedById String?
+
+  @@index([sortOrder])
+}
+
+model Notification {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type  String
+  title String
+  body  String?
+  link  String?
+
+  // What this notification is about, in structured form. `link` alone is not
+  // enough to clean up after: it is a display string, and the application id
+  // is only recoverable by parsing a path out of it. Without a subject, deleting
+  // the thing a notification describes leaves the notification behind, so the
+  // recipient keeps a permanent unread badge for a row that no longer exists.
+  // Nullable because not every notification has a subject (a settings change is
+  // about the settings row as a whole, not one of its revisions).
+  subjectType String?
+  subjectId   String?
+
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, readAt])
+  @@index([userId, createdAt])
+  @@index([subjectType, subjectId])
+}
+
+/// DB-backed rate limit buckets. Process-local maps do not work reliably on
+/// serverless, so limits that matter are persisted.
+model RateLimitBucket {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  count       Int      @default(0)
+  windowStart DateTime @default(now())
+
+  @@index([windowStart])
 }

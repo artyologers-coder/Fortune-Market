@@ -13,6 +13,12 @@ export const featureFlags = {
   SELLER_SUBSCRIPTIONS: false,
   ADVERTISING: false,
   FORTUNE_CREATIVE: false,
+  // Producer Acquisition Representative programme.
+  // Distinct from COMMISSION_SYSTEM, which is the unrelated reseller scraper
+  // toggle. Both start off; enable REPRESENTATIVE_SYSTEM only once the admin
+  // surface is ready, so no public route is reachable in a half-built state.
+  REPRESENTATIVE_SYSTEM: false,
+  REPRESENTATIVE_APPLICATIONS: false,
 } as const;
 
 export type FeatureFlag = keyof typeof featureFlags;

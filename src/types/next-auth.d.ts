@@ -10,6 +10,8 @@ declare module "next-auth" {
       phoneVerified: boolean;
       producerId: string | null;
       verifiedProducer: boolean;
+      representativeId: string | null;
+      representativeStatus: string | null;
     } & DefaultSession["user"];
   }
 
@@ -19,6 +21,8 @@ declare module "next-auth" {
     phoneVerified: boolean;
     producerId: string | null;
     verifiedProducer: boolean;
+    representativeId: string | null;
+    representativeStatus: string | null;
   }
 }
 
@@ -29,5 +33,7 @@ declare module "next-auth/jwt" {
     phoneVerified: boolean;
     producerId: string | null;
     verifiedProducer: boolean;
+    representativeId: string | null;
+    representativeStatus: string | null;
   }
 }

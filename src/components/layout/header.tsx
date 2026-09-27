@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { useCartCount } from "@/lib/cart-context";
 import { Logo } from "@/components/ui/logo";
 import { isFeatureEnabled } from "@/lib/feature-flags";
+import { NotificationBell } from "@/components/layout/notification-bell";
 
 export function Header() {
   const { data: session } = useSession();
@@ -77,6 +78,20 @@ export function Header() {
                 Dashboard
               </Link>
             )}
+            {isFeatureEnabled("REPRESENTATIVE_APPLICATIONS") &&
+              role !== "REPRESENTATIVE" && (
+                <Link
+                  href="/representative/apply"
+                  className="text-gray-600 hover:text-primary text-sm"
+                >
+                  Become a Representative
+                </Link>
+              )}
+            {isFeatureEnabled("REPRESENTATIVE_SYSTEM") && role === "REPRESENTATIVE" && (
+              <Link href="/representative" className="text-gray-600 hover:text-primary text-sm">
+                Representative
+              </Link>
+            )}
             {role === "ADMIN" && (
               <Link href="/admin" className="text-gray-600 hover:text-primary text-sm">
                 Admin
@@ -87,6 +102,7 @@ export function Header() {
           <div className="hidden md:flex items-center gap-3">
             {session ? (
               <div className="flex items-center gap-3">
+                <NotificationBell />
                 <Link href="/account" className="text-sm text-gray-600 hover:text-primary">
                   {session.user?.name}
                 </Link>
@@ -126,6 +142,14 @@ export function Header() {
         {mobileOpen && (
           <div className="md:hidden pb-4 border-t border-gray-100 mt-2 pt-4">
             <div className="flex flex-col gap-3">
+              {session && (
+                <div className="flex items-center gap-3 pb-2 border-b border-gray-100">
+                  <NotificationBell />
+                  <span className="text-sm text-gray-600">
+                    {session.user?.name}
+                  </span>
+                </div>
+              )}
               {isFeatureEnabled("PRODUCTS") && (
                 <Link href="/search" className="text-gray-600 hover:text-primary text-sm" onClick={() => setMobileOpen(false)}>Search</Link>
               )}
@@ -134,6 +158,13 @@ export function Header() {
               )}
               {isFeatureEnabled("PRODUCTS") && (
                 <Link href="/cart" className="text-gray-600 hover:text-primary text-sm" onClick={() => setMobileOpen(false)}>Cart</Link>
+              )}
+              {isFeatureEnabled("REPRESENTATIVE_APPLICATIONS") &&
+                role !== "REPRESENTATIVE" && (
+                  <Link href="/representative/apply" className="text-gray-600 hover:text-primary text-sm" onClick={() => setMobileOpen(false)}>Become a Representative</Link>
+                )}
+              {isFeatureEnabled("REPRESENTATIVE_SYSTEM") && role === "REPRESENTATIVE" && (
+                <Link href="/representative" className="text-gray-600 hover:text-primary text-sm" onClick={() => setMobileOpen(false)}>Representative</Link>
               )}
               {isFeatureEnabled("ORDER_HISTORY") && session && (
                 <Link href="/orders" className="text-gray-600 hover:text-primary text-sm" onClick={() => setMobileOpen(false)}>Orders</Link>

@@ -1,0 +1,18 @@
+{
+  "//": "The verification scripts are .mts and use top-level await, so they cannot be checked by the app tsconfig: that targets ES5 with bundler resolution, which forbids both. They are run by tsx, which has its own defaults, so without this file they were never type-checked at all - a redeclared variable in one of them shipped unnoticed. Run with: npx tsc -p tsconfig.scripts.json",
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "incremental": false
+  },
+  "include": [
+    "scripts/**/*.mts",
+    "scripts/**/*.ts",
+    "src/types/**/*.d.ts",
+    "next-env.d.ts"
+  ]
+}

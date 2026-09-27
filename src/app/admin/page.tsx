@@ -155,7 +155,7 @@ export default function AdminPage() {
   const [userSearch, setUserSearch] = useState("");
   const [resettingUserId, setResettingUserId] = useState<string | null>(null);
   const [resetModal, setResetModal] = useState<ResetModalData | null>(null);
-  const [activeTab, setActiveTab] = useState<"overview" | "verification" | "memberships" | "moderation" | "products" | "reseller-import" | "reseller-products" | "reseller-settings" | "orders" | "users" | "offers" | "add-product">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "verification" | "memberships" | "moderation" | "products" | "reseller-import" | "reseller-products" | "reseller-settings" | "representatives" | "orders" | "users" | "offers" | "add-product">("overview");
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -403,8 +403,9 @@ export default function AdminPage() {
       <h1 className="text-3xl font-bold text-gray-900 mb-8">Admin Panel</h1>
 
       <div className="flex gap-2 mb-6 border-b border-gray-200">
-        {(["overview", "verification", "memberships", "moderation", "products", "orders", "users", "offers", "reseller-import", "reseller-products", "reseller-settings", "add-product"] as const)
+        {(["overview", "verification", "memberships", "moderation", "products", "orders", "users", "offers", "reseller-import", "reseller-products", "reseller-settings", "representatives", "add-product"] as const)
           .filter((tab) => isFeatureEnabled("COMMISSION_SYSTEM") || !tab.startsWith("reseller-"))
+          .filter((tab) => tab !== "representatives" || isFeatureEnabled("REPRESENTATIVE_SYSTEM"))
           .map((tab) => (
           <button
             key={tab}
@@ -415,7 +416,7 @@ export default function AdminPage() {
                 : "border-transparent text-gray-500 hover:text-gray-700"
             }`}
           >
-            {tab === "overview" ? "Overview" : tab === "verification" ? "Verification" : tab === "memberships" ? "Memberships" : tab === "moderation" ? "Moderation" : tab === "products" ? "Products" : tab === "orders" ? "Orders" : tab === "users" ? "Users" : tab === "offers" ? "Offers" : tab === "reseller-import" ? "Reseller Import" : tab === "reseller-products" ? "Reseller Products" : tab === "reseller-settings" ? "Reseller Settings" : "Add Product"}
+            {tab === "overview" ? "Overview" : tab === "verification" ? "Verification" : tab === "memberships" ? "Memberships" : tab === "moderation" ? "Moderation" : tab === "products" ? "Products" : tab === "orders" ? "Orders" : tab === "users" ? "Users" : tab === "offers" ? "Offers" : tab === "reseller-import" ? "Reseller Import" : tab === "reseller-products" ? "Reseller Products" : tab === "reseller-settings" ? "Reseller Settings" : tab === "representatives" ? "Representatives" : "Add Product"}
           </button>
         ))}
       </div>
@@ -780,6 +781,14 @@ export default function AdminPage() {
         <div className="space-y-4">
           <a href="/admin/reseller-settings" className="btn-primary inline-block">
             Open Reseller Settings
+          </a>
+        </div>
+      )}
+
+      {isFeatureEnabled("REPRESENTATIVE_SYSTEM") && activeTab === "representatives" && (
+        <div className="space-y-4">
+          <a href="/admin/representatives" className="btn-primary inline-block">
+            Open Representative Programme
           </a>
         </div>
       )}

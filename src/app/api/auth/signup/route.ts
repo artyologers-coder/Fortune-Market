@@ -10,6 +10,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
+    // A representative account must go through review, so this generic
+    // endpoint refuses the role outright rather than silently downgrading it to
+    // BUYER. Silently downgrading would hand the applicant a working login and
+    // a confusing "why can't I see my dashboard" instead of telling them to
+    // apply.
+    if (role === "REPRESENTATIVE" || role === "ADMIN") {
+      return NextResponse.json(
+        { error: "This account type cannot be created here. Representatives must apply and be approved by an admin." },
+        { status: 403 }
+      );
+    }
+
     const existing = await prisma.user.findFirst({
       where: { OR: [{ email }, ...(phone ? [{ phone }] : [])] },
     });
