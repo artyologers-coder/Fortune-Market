@@ -17,8 +17,12 @@ export const featureFlags = {
   // Distinct from COMMISSION_SYSTEM, which is the unrelated reseller scraper
   // toggle. Both start off; enable REPRESENTATIVE_SYSTEM only once the admin
   // surface is ready, so no public route is reachable in a half-built state.
-  REPRESENTATIVE_SYSTEM: false,
-  REPRESENTATIVE_APPLICATIONS: false,
+  //
+  // Enabled 2026-09-27: schema pushed, guide seeded, 194 verification checks
+  // green. To hide the programme again set both to false — the admin page falls
+  // back to the "not enabled" notice and every public route 404s.
+  REPRESENTATIVE_SYSTEM: true,
+  REPRESENTATIVE_APPLICATIONS: true,
 } as const;
 
 export type FeatureFlag = keyof typeof featureFlags;

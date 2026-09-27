@@ -1,8 +1,8 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import { RepresentativeAdmin } from "@/components/admin/representative-admin";
 
@@ -19,6 +19,13 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "guide", label: "Guide" },
 ];
 
+const TAB_IDS = TABS.map((t) => t.id);
+const DEFAULT_TAB: Tab = "applications";
+
+function isTab(value: string | null): value is Tab {
+  return value !== null && (TAB_IDS as string[]).includes(value);
+}
+
 /**
  * Admin home for the representative programme.
  *
@@ -26,16 +33,56 @@ const TABS: { id: Tab; label: string }[] = [
  * resolves, so the tabs never flash for a non-admin. That is a usability guard,
  * not the security boundary — every API this page calls re-checks the role
  * server-side, so editing the client bundle grants nothing.
+ *
+ * The active tab lives in `?tab=`, so a specific tab can be linked to and the
+ * back button works. An unrecognised `?tab=` falls back to Applications rather
+ * than rendering an empty page.
  */
 export default function RepresentativeAdminPage() {
+  return (
+    <Suspense fallback={<main className="page-container">Loading…</main>}>
+      <RepresentativeAdminView />
+    </Suspense>
+  );
+}
+
+function RepresentativeAdminView() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [tab, setTab] = useState<Tab>("applications");
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const requested = searchParams.get("tab");
+  const [tab, setTab] = useState<Tab>(isTab(requested) ? requested : DEFAULT_TAB);
 
   useEffect(() => {
-    if (status === "unauthenticated") router.push("/auth/login?callbackUrl=/admin/representatives");
+    if (status === "unauthenticated") {
+      const callback = encodeURIComponent(
+        requested && isTab(requested)
+          ? `${pathname}?tab=${requested}`
+          : pathname
+      );
+      router.push(`/auth/login?callbackUrl=${callback}`);
+    }
     if (status === "authenticated" && session?.user?.role !== "ADMIN") router.push("/");
-  }, [status, session, router]);
+  }, [status, session, router, pathname, requested]);
+
+  // Follow the URL when it changes from outside this page (back/forward, or a
+  // shared link), so the tab shown always matches the address bar.
+  useEffect(() => {
+    setTab(isTab(requested) ? requested : DEFAULT_TAB);
+  }, [requested]);
+
+  const selectTab = useCallback(
+    (next: Tab) => {
+      setTab(next);
+      // replace rather than push: switching tabs is navigation within one page,
+      // and pushing would make the back button step through every tab visited.
+      router.replace(next === DEFAULT_TAB ? pathname : `${pathname}?tab=${next}`, {
+        scroll: false,
+      });
+    },
+    [router, pathname]
+  );
 
   if (status === "loading") {
     return <main className="page-container">Loading…</main>;
@@ -75,7 +122,8 @@ export default function RepresentativeAdminPage() {
           <button
             key={t.id}
             type="button"
-            onClick={() => setTab(t.id)}
+            onClick={() => selectTab(t.id)}
+            aria-current={tab === t.id ? "page" : undefined}
             className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 -mb-px transition-colors ${
               tab === t.id
                 ? "border-primary text-primary"
