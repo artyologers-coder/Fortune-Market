@@ -30,7 +30,7 @@ export function Hero({ home, si, products }: HeroProps) {
             {home.madeIn}
             <span className="font-medium text-gray-500">· ලංකාවේ සාදන ලද</span>
           </p>
-          <h1 className="mt-4 text-2xl sm:text-3xl md:text-4xl font-extrabold leading-snug text-gray-900">
+          <h1 className="mt-4 text-xl sm:text-2xl md:text-3xl font-extrabold leading-snug text-maroon">
             {home.tagline}
           </h1>
           <p className="mt-3 text-base md:text-lg text-gray-600">{si.tagline}</p>
