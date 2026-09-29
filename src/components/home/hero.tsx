@@ -25,8 +25,10 @@ export function Hero({ home, si, products }: HeroProps) {
 
       <div className="page-container relative grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
         <div className="max-w-xl">
-          <p className="inline-flex items-center gap-2 rounded-full bg-white/80 px-4 py-1.5 text-xs font-semibold text-primary-700 ring-1 ring-primary-100">
-            <span aria-hidden="true">🇱🇰</span> {home.madeIn}
+          <p className="inline-flex items-center gap-2.5 rounded-full bg-white px-5 py-2 text-sm font-bold text-primary-700 shadow-sm ring-2 ring-primary-200">
+            <span className="text-xl" aria-hidden="true">🇱🇰</span>
+            {home.madeIn}
+            <span className="font-medium text-gray-500">· ලංකාවේ සාදන ලද</span>
           </p>
           <h1 className="mt-5 text-4xl md:text-5xl font-extrabold leading-tight text-gray-900">
             {home.tagline}
