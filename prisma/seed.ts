@@ -1,6 +1,40 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
+// The seed script writes demo data (producers, products, settings, guide
+// sections). Running it against a production branch seeded a demo catalog and
+// synthetic audit rows into a live database. Refuse to run unless the target
+// is explicitly a non-production branch.
+const PRODUCTION_ENDPOINTS = ["ep-rough-mountain-b3fah4f2"];
+const SEED_OVERRIDE = "SEED_ALLOW_PRODUCTION";
+
+function assertNotProduction(): void {
+  const url = process.env.DATABASE_URL;
+  if (!url) {
+    throw new Error("DATABASE_URL is required to run the seed script");
+  }
+  const match = url.match(/\/\/[^@/]*@?([^/:?]+)/);
+  const host = match ? match[1] : url;
+  const endpoint = host.match(/^(ep-[a-z0-9-]+?)(?:-pooler)?(?:\.|$)/);
+  if (endpoint && PRODUCTION_ENDPOINTS.includes(endpoint[1])) {
+    if (process.env[SEED_OVERRIDE] === "1") {
+      console.warn(
+        `[seed] WARNING: ${SEED_OVERRIDE}=1 set, seeding ${endpoint[1]}. Only use this for intended production data changes.`
+      );
+    } else {
+      throw new Error(
+        `[seed] REFUSING to seed "${endpoint[1]}": that is a production endpoint.\n` +
+          `This script writes demo producers, products and settings. Point DATABASE_URL ` +
+          `at a dev branch instead, or set ${SEED_OVERRIDE}=1 to run it deliberately.`
+      );
+    }
+  } else {
+    console.log(`[seed] target ${host} (endpoint ${endpoint ? endpoint[1] : "unknown"})`);
+  }
+}
+
+assertNotProduction();
+
 const prisma = new PrismaClient();
 
 async function main() {
