@@ -55,7 +55,7 @@ export default async function ProducersPage() {
         </div>
         <h1 className="text-3xl font-bold text-gray-900">Meet the Makers</h1>
         <p className="mt-2 text-gray-500">
-          Verified home-based producers and small businesses, straight from Sri Lankan homes.
+          Verified home-based producers and small businesses, straight from Sri Lanka.
         </p>
       </div>
 
@@ -85,7 +85,7 @@ export default async function ProducersPage() {
                 {producer.district ? ` · ${producer.district}` : ""}
               </p>
               <p className="mb-3 text-xs text-gray-500 line-clamp-1">
-                {producer.products[0]?.name ? `Makes ${producer.products[0].name}` : "Home-based maker"}
+                {producer.products[0]?.name ? `Makes ${producer.products[0].name}` : "Local Sri Lankan maker"}
               </p>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1 text-sm">

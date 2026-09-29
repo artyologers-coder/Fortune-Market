@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     template: "%s | Fortune Market",
   },
   description:
-    "Sri Lankan home-made products: buy directly from home-based producers and small businesses.",
+    "Sri Lankan products: buy directly from home-based producers and small factories.",
   metadataBase: new URL(process.env.NEXTAUTH_URL ?? "https://fortunemarket.lk"),
   openGraph: {
     siteName: "Fortune Market",
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     locale: "en_LK",
     title: "Fortune Market",
     description:
-      "Buy directly from Sri Lankan home-based producers — hand-made foods, crafts, naturals and fashion.",
+      "Buy directly from Sri Lankan home-based producers — foods, crafts, naturals and fashion.",
   },
 };
 

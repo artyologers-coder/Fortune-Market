@@ -20,10 +20,10 @@
   },
   "home": {
     "tagline": "Directly from the authentic Sri Lankan maker to your home!",
-    "ctaPrimary": "Shop handmade",
+    "ctaPrimary": "Shop local",
     "ctaSecondary": "Become a maker",
-    "trustHandmade": "Handmade by home-based makers",
-    "trustHandmadeSub": "Small batches, made with care in Lankan homes",
+    "trustHandmade": "Locally made in Sri Lanka",
+    "trustHandmadeSub": "Home kitchens, small workshops and factories across the island",
     "trustVerified": "Verified village producers",
     "trustVerifiedSub": "Checked and approved before they sell",
     "trustDirect": "Direct from the maker",
@@ -35,7 +35,7 @@
     "viewAll": "View all",
     "makers": "Meet the Makers",
     "visitShop": "Visit shop",
-    "makesFallback": "Home-based maker",
+    "makesFallback": "Local Sri Lankan maker",
     "madeIn": "Made in Sri Lanka"
   },
   "categories": {
@@ -45,7 +45,7 @@
     "naturals": "Fortune Naturals",
     "fashion": "Fortune Fashion",
 "foodsDesc": "Natural food products",
-    "craftsDesc": "Handmade crafts",
+    "craftsDesc": "Sri Lankan crafts",
     "naturalsDesc": "Natural products",
     "fashionDesc": "Local fashion",
     "verifiedProducers": "Verified Producers"

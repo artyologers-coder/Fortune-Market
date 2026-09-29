@@ -191,7 +191,7 @@ export function Header() {
                 type="search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search handmade products..."
+                placeholder="Search local products..."
                 className="w-full rounded-full border border-gray-200 bg-gray-50 py-2 pl-11 pr-4 text-sm text-gray-900 placeholder:text-gray-400 focus:border-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-300"
               />
             </div>

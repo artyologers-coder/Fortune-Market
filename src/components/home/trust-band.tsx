@@ -6,7 +6,7 @@ interface TrustBandProps {
 
 export function TrustBand({ home }: TrustBandProps) {
   const items = [
-    { icon: "🏠", title: home.trustHandmade, sub: home.trustHandmadeSub },
+    { icon: "🇱🇰", title: home.trustHandmade, sub: home.trustHandmadeSub },
     { icon: "🛡️", title: home.trustVerified, sub: home.trustVerifiedSub },
     { icon: "🤝", title: home.trustDirect, sub: home.trustDirectSub },
     { icon: "💵", title: home.trustCod, sub: home.trustCodSub },
