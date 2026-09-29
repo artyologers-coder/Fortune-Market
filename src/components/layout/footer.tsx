@@ -34,8 +34,13 @@ export function Footer() {
             </div>
           )}
         </div>
-        <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-500">
-          © 2026 Fortune Market — A project of Artyologers. All rights reserved.
+        <div className="border-t border-gray-800 mt-8 pt-8 text-center">
+          <p className="mb-2 text-xs font-medium tracking-wide text-gray-400">
+            Made in Sri Lanka 🇱🇰 · ලංකාවේ සාදන ලද
+          </p>
+          <p className="text-sm text-gray-500">
+            © 2026 Fortune Market — A project of Artyologers. All rights reserved.
+          </p>
         </div>
       </div>
     </footer>

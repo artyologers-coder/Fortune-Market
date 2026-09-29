@@ -5,11 +5,21 @@ import { Footer } from "@/components/layout/footer";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Fortune Market",
-  description: "Sri Lankan online marketplace connecting home-based producers with buyers",
-  metadataBase: new URL(
-    process.env.NEXTAUTH_URL ?? "https://fortune-market-drab.vercel.app"
-  ),
+  title: {
+    default: "Fortune Market",
+    template: "%s | Fortune Market",
+  },
+  description:
+    "Sri Lankan home-made products: buy directly from home-based producers and small businesses.",
+  metadataBase: new URL(process.env.NEXTAUTH_URL ?? "https://fortunemarket.lk"),
+  openGraph: {
+    siteName: "Fortune Market",
+    type: "website",
+    locale: "en_LK",
+    title: "Fortune Market",
+    description:
+      "Buy directly from Sri Lankan home-based producers — hand-made foods, crafts, naturals and fashion.",
+  },
 };
 
 export default function RootLayout({

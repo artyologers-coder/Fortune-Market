@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { useCartCount } from "@/lib/cart-context";
@@ -10,9 +11,21 @@ import { NotificationBell } from "@/components/layout/notification-bell";
 
 export function Header() {
   const { data: session } = useSession();
+  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [search, setSearch] = useState("");
   const cartCount = useCartCount();
   const [unreadCount, setUnreadCount] = useState(0);
+
+  const submitSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const query = search.trim();
+    if (query) {
+      router.push(`/search?q=${encodeURIComponent(query)}`);
+    } else {
+      router.push("/search");
+    }
+  };
 
   const role = session?.user?.role;
 
@@ -138,6 +151,38 @@ export function Header() {
             </svg>
           </button>
         </div>
+
+        {isFeatureEnabled("PRODUCTS") && (
+          <form
+            onSubmit={submitSearch}
+            role="search"
+            aria-label="Search products"
+            className="hidden md:block border-t border-gray-100 py-3"
+          >
+            <div className="relative">
+              <svg
+                className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-4.35-4.35M17 10.5a6.5 6.5 0 11-13 0 6.5 6.5 0 0113 0z"
+                />
+              </svg>
+              <input
+                type="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search handmade products..."
+                className="w-full rounded-full border border-gray-200 bg-gray-50 py-2 pl-11 pr-4 text-sm text-gray-900 placeholder:text-gray-400 focus:border-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-300"
+              />
+            </div>
+          </form>
+        )}
 
         {mobileOpen && (
           <div className="md:hidden pb-4 border-t border-gray-100 mt-2 pt-4">

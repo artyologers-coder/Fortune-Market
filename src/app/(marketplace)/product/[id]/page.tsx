@@ -13,7 +13,7 @@ interface Props {
 }
 
 const BASE_URL =
-  process.env.NEXTAUTH_URL ?? "https://fortune-market-drab.vercel.app";
+  process.env.NEXTAUTH_URL ?? "https://fortunemarket.lk";
 
 function findProduct(key: string) {
   return prisma.product.findFirst({

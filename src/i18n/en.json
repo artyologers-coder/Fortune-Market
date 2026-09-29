@@ -18,6 +18,26 @@
     "subtitle": "Buy directly from Sri Lankan home-based producers",
     "cta": "Shop Now"
   },
+  "home": {
+    "tagline": "Sri Lankan home-made, straight from the maker",
+    "ctaPrimary": "Shop handmade",
+    "ctaSecondary": "Become a maker",
+    "trustHandmade": "Handmade by home-based makers",
+    "trustHandmadeSub": "Small batches, made with care in Lankan homes",
+    "trustVerified": "Verified village producers",
+    "trustVerifiedSub": "Checked and approved before they sell",
+    "trustDirect": "Direct from the maker",
+    "trustDirectSub": "No middlemen, fairer prices",
+    "trustCod": "Cash on Delivery",
+    "trustCodSub": "Island-wide, pay on delivery",
+    "featuredProducts": "Featured Products",
+    "madeBy": "by",
+    "viewAll": "View all",
+    "makers": "Meet the Makers",
+    "visitShop": "Visit shop",
+    "makesFallback": "Home-based maker",
+    "madeIn": "Made in Sri Lanka"
+  },
   "categories": {
     "title": "Browse by Category",
     "foods": "Fortune Foods",

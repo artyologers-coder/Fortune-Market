@@ -1,179 +1,172 @@
 import { prisma } from "@/lib/prisma";
 import { getDictionary } from "@/lib/i18n";
-import Link from "next/link";
-import { Logo } from "@/components/ui/logo";
-import { ProductImage } from "@/components/product/product-image";
-import { visibleProducerProductWhere, activeMembershipWhere } from "@/lib/producer-membership";
+import { getFirstImage } from "@/lib/product-images";
+import { activeMembershipWhere, visibleProducerProductWhere } from "@/lib/producer-membership";
+import { Hero, type HeroProduct } from "@/components/home/hero";
+import { TrustBand } from "@/components/home/trust-band";
+import {
+  CategoryCards,
+  type CategoryCardItem,
+} from "@/components/home/category-cards";
+import {
+  FeaturedProducts,
+  type FeaturedProductItem,
+} from "@/components/home/featured-products";
+import {
+  FeaturedMakers,
+  type FeaturedMakerItem,
+} from "@/components/home/featured-makers";
 
 export const dynamic = "force-dynamic";
 
 const CATEGORY_SLUGS = ["foods", "crafts", "naturals", "fashion"];
 
-function shuffle<T>(array: T[]): T[] {
-  const result = [...array];
-  for (let i = result.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [result[i], result[j]] = [result[j], result[i]];
-  }
-  return result;
-}
+type ProductRow = {
+  id: string;
+  name: string;
+  price: number;
+  rating: number;
+  images: string | null;
+  producer: {
+    businessName: string;
+    verificationStatus: string;
+    location: string;
+  };
+  category: { name: string; slug: string };
+};
 
-export default function HomePage() {
-  const dict = getDictionary("en");
+type MakerRow = {
+  id: string;
+  businessName: string;
+  location: string;
+  district: string;
+  rating: number;
+  totalReviews: number;
+  products: { name: string }[];
+};
+
+type CategoryRow = {
+  slug: string;
+  name: string;
+  nameSi: string;
+  image: string | null;
+};
+
+export default async function HomePage() {
+  const home = getDictionary("en").home;
+  const si = getDictionary("si").home;
+
+  let products: ProductRow[] = [];
+  let makers: MakerRow[] = [];
+  let categories: CategoryRow[] = [];
+
+  try {
+    const [productRows, makerRows, categoryRows] = await Promise.all([
+      prisma.product.findMany({
+        where: {
+          active: true,
+          flagged: false,
+          ...visibleProducerProductWhere(),
+        },
+        select: {
+          id: true,
+          name: true,
+          price: true,
+          rating: true,
+          images: true,
+          producer: {
+            select: {
+              businessName: true,
+              verificationStatus: true,
+              location: true,
+            },
+          },
+          category: { select: { name: true, slug: true } },
+        },
+        orderBy: { rating: "desc" },
+        take: 32,
+      }),
+      prisma.producer.findMany({
+        where: {
+          verificationStatus: "APPROVED",
+          ...activeMembershipWhere(),
+        },
+        select: {
+          id: true,
+          businessName: true,
+          location: true,
+          district: true,
+          rating: true,
+          totalReviews: true,
+          products: { take: 1, select: { name: true }, where: { active: true } },
+        },
+        orderBy: { rating: "desc" },
+        take: 12,
+      }),
+      prisma.category.findMany({
+        where: { slug: { in: CATEGORY_SLUGS } },
+        select: { slug: true, name: true, nameSi: true, image: true },
+      }),
+    ]);
+
+    products = productRows;
+    makers = makerRows;
+    categories = categoryRows;
+  } catch (error) {
+    console.error("Failed to fetch homepage data:", error);
+  }
+
+  const heroProducts: HeroProduct[] = products.slice(0, 4).map((p) => ({
+    id: p.id,
+    name: p.name,
+    images: p.images,
+    producer: p.producer,
+  }));
+
+  const featuredProducts: FeaturedProductItem[] = products.slice(0, 8).map((p) => ({
+    id: p.id,
+    name: p.name,
+    price: p.price,
+    rating: p.rating,
+    images: p.images,
+    category: p.category,
+    producer: p.producer,
+  }));
+
+  const categoryCards: CategoryCardItem[] = CATEGORY_SLUGS.map((slug) => {
+    const category = categories.find((c) => c.slug === slug);
+    const representative = products.find((p) => p.category.slug === slug);
+    return {
+      slug,
+      name: category?.name ?? slug,
+      nameSi: category?.nameSi ?? "",
+      image: category?.image ?? (representative ? getFirstImage(representative.images) : null),
+    };
+  });
+
+  const featuredMakers: FeaturedMakerItem[] = makers.map((m) => ({
+    id: m.id,
+    businessName: m.businessName,
+    location: m.location,
+    district: m.district,
+    rating: m.rating,
+    totalReviews: m.totalReviews,
+    firstProduct: m.products[0]?.name ?? null,
+  }));
 
   return (
     <div>
-      <section className="bg-gradient-to-br from-primary-500 to-primary-700 text-white">
-        <div className="page-container text-center">
-          <Logo className="h-24 w-auto mx-auto mb-6 drop-shadow-lg" />
-          <p className="text-lg md:text-xl text-primary-100 mb-8 max-w-2xl mx-auto">
-            {dict.hero.subtitle}
-          </p>
-          <Link href="/search" className="btn-secondary inline-block">
-            {dict.hero.cta}
-          </Link>
-        </div>
-      </section>
-
+      <Hero home={home} si={si} products={heroProducts} />
+      <TrustBand home={home} />
       <section className="page-container">
-        <Link href={`/category/${CATEGORY_SLUGS[0]}`}>
-          <h2 className="section-title text-center hover:text-primary">{dict.categories.title}</h2>
-        </Link>
-        <CategoryCards dict={dict} />
+        <CategoryCards cards={categoryCards} />
       </section>
-
-      <section className="page-container">
-        <h2 className="section-title">{dict.product.title}s</h2>
-        <FeaturedProducts />
-      </section>
-
-      <section className="page-container">
-        <h2 className="section-title">{dict.categories.verifiedProducers}</h2>
-        <FeaturedProducers />
-      </section>
-    </div>
-  );
-}
-
-function CategoryCards({ dict }: { dict: ReturnType<typeof getDictionary> }) {
-  const categories = [
-    { slug: "foods", name: dict.categories.foods, desc: dict.categories.foodsDesc, icon: "🍛" },
-    { slug: "crafts", name: dict.categories.crafts, desc: dict.categories.craftsDesc, icon: "🎨" },
-    { slug: "naturals", name: dict.categories.naturals, desc: dict.categories.naturalsDesc, icon: "🌿" },
-    { slug: "fashion", name: dict.categories.fashion, desc: dict.categories.fashionDesc, icon: "👗" },
-  ];
-
-  return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-      {categories.map((cat) => (
-        <Link
-          key={cat.slug}
-          href={`/category/${cat.slug}`}
-          className="card p-6 text-center hover:scale-[1.02] transition-transform"
-        >
-          <span className="text-4xl mb-3 block">{cat.icon}</span>
-          <h3 className="font-semibold text-gray-900 mb-1">{cat.name}</h3>
-          <p className="text-sm text-gray-500">{cat.desc}</p>
-        </Link>
-      ))}
-    </div>
-  );
-}
-
-async function FeaturedProducers() {
-  let producers;
-  try {
-    producers = await prisma.producer.findMany({
-      where: {
-        verificationStatus: "APPROVED",
-        ...activeMembershipWhere(),
-      },
-      include: { user: { select: { name: true } } },
-      orderBy: { rating: "desc" },
-      take: 12,
-    });
-  } catch (error) {
-    console.error("Failed to fetch producers:", error);
-    return <p className="text-gray-500 text-center py-8">Unable to load producers</p>;
-  }
-
-  const featured = shuffle(producers).slice(0, 4);
-
-  if (featured.length === 0) {
-    return <p className="text-gray-500 text-center py-8">No verified producers yet</p>;
-  }
-
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-      {featured.map((producer) => (
-        <Link key={producer.id} href={`/seller/${producer.id}`} className="card p-6 hover:scale-[1.02] transition-transform">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center text-primary font-bold text-lg">
-              {producer.businessName.charAt(0)}
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900">{producer.businessName}</h3>
-              <span className="badge-verified">✓ Verified</span>
-            </div>
-          </div>
-          <p className="text-sm text-gray-500 mb-2">{producer.location}</p>
-          <div className="flex items-center gap-1 text-sm">
-            <span className="text-accent">★</span>
-            <span className="font-medium">{producer.rating.toFixed(1)}</span>
-            <span className="text-gray-400">({producer.totalReviews})</span>
-          </div>
-        </Link>
-      ))}
-    </div>
-  );
-}
-
-async function FeaturedProducts() {
-  let products;
-  try {
-    products = await prisma.product.findMany({
-      where: { active: true, flagged: false, ...visibleProducerProductWhere() },
-      include: {
-        producer: { include: { user: { select: { name: true } } } },
-        category: { select: { name: true, nameSi: true } },
-      },
-      orderBy: { rating: "desc" },
-      take: 32,
-    });
-  } catch (error) {
-    console.error("Failed to fetch products:", error);
-    return <p className="text-gray-500 text-center py-8">Unable to load products</p>;
-  }
-
-  const featured = shuffle(products).slice(0, 8);
-
-  if (featured.length === 0) {
-    return <p className="text-gray-500 text-center py-8">No products yet</p>;
-  }
-
-  return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-      {featured.map((product) => (
-        <Link key={product.id} href={`/product/${product.id}`} className="card">
-          <ProductImage images={product.images} alt={product.name} />
-          <div className="p-4">
-            <h3 className="font-medium text-gray-900 text-sm mb-1 line-clamp-2">
-              {product.name}
-            </h3>
-            <p className="text-xs text-gray-500 mb-2">{product.category.name}</p>
-            <div className="flex items-center justify-between">
-              <span className="font-bold text-primary">Rs. {product.price}</span>
-              <div className="flex items-center gap-1 text-xs">
-                <span className="text-accent">★</span>
-                <span>{product.rating.toFixed(1)}</span>
-              </div>
-            </div>
-            {product.producer.verificationStatus === "APPROVED" && (
-              <span className="badge-verified mt-2 text-[10px]">✓ Verified</span>
-            )}
-          </div>
-        </Link>
-      ))}
+      <FeaturedProducts
+        products={featuredProducts}
+        home={home}
+        si={si}
+      />
+      <FeaturedMakers makers={featuredMakers} home={home} si={si} />
     </div>
   );
 }
