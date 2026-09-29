@@ -19,7 +19,8 @@
     "cta": "Shop Now"
   },
   "home": {
-    "tagline": "Directly from the authentic Sri Lankan maker to your home!",
+    "taglineLine1": "Directly from the authentic",
+    "taglineLine2": "Sri Lankan maker to your home!",
     "ctaPrimary": "Shop local",
     "ctaSecondary": "Become a maker",
     "trustHandmade": "Locally made in Sri Lanka",

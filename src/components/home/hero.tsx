@@ -31,9 +31,15 @@ export function Hero({ home, si, products }: HeroProps) {
             <span className="font-medium text-gray-500">· ලංකාවේ සාදන ලද</span>
           </p>
           <h1 className="mt-4 text-xl sm:text-2xl md:text-3xl font-extrabold leading-snug text-maroon">
-            {home.tagline}
+            {home.taglineLine1}
+            <br />
+            {home.taglineLine2}
           </h1>
-          <p className="mt-3 text-base md:text-lg text-gray-600">{si.tagline}</p>
+          <p className="mt-3 text-base md:text-lg text-gray-600">
+            {si.taglineLine1}
+            <br />
+            {si.taglineLine2}
+          </p>
           <div className="mt-8 flex flex-wrap gap-4">
             <Link href="/search" className="btn-primary">
               {home.ctaPrimary}
