@@ -21,6 +21,15 @@ export const dynamic = "force-dynamic";
 
 const CATEGORY_SLUGS = ["foods", "crafts", "naturals", "fashion"];
 
+function shuffle<T>(array: T[]): T[] {
+  const result = [...array];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
 type ProductRow = {
   id: string;
   name: string;
@@ -116,14 +125,17 @@ export default async function HomePage() {
     console.error("Failed to fetch homepage data:", error);
   }
 
-  const heroProducts: HeroProduct[] = products.slice(0, 4).map((p) => ({
+  const shuffledProducts = shuffle(products);
+  const shuffledMakers = shuffle(makers);
+
+  const heroProducts: HeroProduct[] = shuffledProducts.slice(0, 4).map((p) => ({
     id: p.id,
     name: p.name,
     images: p.images,
     producer: p.producer,
   }));
 
-  const featuredProducts: FeaturedProductItem[] = products.slice(0, 8).map((p) => ({
+  const featuredProducts: FeaturedProductItem[] = shuffledProducts.slice(0, 8).map((p) => ({
     id: p.id,
     name: p.name,
     price: p.price,
@@ -135,7 +147,7 @@ export default async function HomePage() {
 
   const categoryCards: CategoryCardItem[] = CATEGORY_SLUGS.map((slug) => {
     const category = categories.find((c) => c.slug === slug);
-    const representative = products.find((p) => p.category.slug === slug);
+    const representative = shuffledProducts.find((p) => p.category.slug === slug);
     return {
       slug,
       name: category?.name ?? slug,
@@ -144,7 +156,7 @@ export default async function HomePage() {
     };
   });
 
-  const featuredMakers: FeaturedMakerItem[] = makers.map((m) => ({
+  const featuredMakers: FeaturedMakerItem[] = shuffledMakers.slice(0, 4).map((m) => ({
     id: m.id,
     businessName: m.businessName,
     location: m.location,
