@@ -4,8 +4,14 @@ export interface CategoryCardItem {
   slug: string;
   name: string;
   nameSi: string;
-  image: string | null;
 }
+
+const CATEGORY_ICONS: Record<string, string> = {
+  foods: "🥘",
+  crafts: "🧶",
+  naturals: "🌿",
+  fashion: "👗",
+};
 
 export function CategoryCards({ cards }: { cards: CategoryCardItem[] }) {
   return (
@@ -14,24 +20,23 @@ export function CategoryCards({ cards }: { cards: CategoryCardItem[] }) {
         <Link
           key={card.slug}
           href={`/category/${card.slug}`}
-          className="group relative h-44 overflow-hidden rounded-2xl shadow-sm ring-1 ring-black/5"
+          className="group relative flex h-44 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-accent-400 to-primary-600 shadow-sm ring-1 ring-black/5 transition-shadow hover:shadow-md"
         >
-          {card.image ? (
-            <img
-              src={card.image}
-              alt={card.name}
-              className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-            />
-          ) : (
-            <div className="absolute inset-0 bg-gradient-to-br from-accent-400 to-primary-600" />
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/15 to-transparent" />
-          <div className="absolute inset-x-0 bottom-0 p-4">
-            <p className="text-lg font-bold leading-tight text-white">{card.name}</p>
+          <span
+            className="pointer-events-none absolute -bottom-8 -right-6 select-none text-9xl opacity-15 blur-sm transition-transform duration-300 group-hover:scale-110"
+            aria-hidden="true"
+          >
+            {CATEGORY_ICONS[card.slug] ?? "🎁"}
+          </span>
+          <div className="relative flex flex-col items-center px-4 text-center">
+            <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white/15 text-3xl ring-1 ring-white/30 backdrop-blur-sm transition-transform duration-300 group-hover:scale-105">
+              {CATEGORY_ICONS[card.slug] ?? "🎁"}
+            </span>
+            <p className="mt-3 text-lg font-bold leading-tight text-white">{card.name}</p>
             {card.nameSi && (
-              <p className="mt-0.5 text-sm text-primary-50/90">{card.nameSi}</p>
+              <p className="mt-0.5 text-sm text-accent-100">{card.nameSi}</p>
             )}
-            <p className="mt-1 text-xs font-medium text-white/80 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+            <p className="mt-2 text-xs font-medium text-white/80 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
               Shop now →
             </p>
           </div>

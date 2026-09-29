@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/prisma";
 import { getDictionary } from "@/lib/i18n";
-import { getFirstImage } from "@/lib/product-images";
 import { activeMembershipWhere, visibleProducerProductWhere } from "@/lib/producer-membership";
 import { Hero, type HeroProduct } from "@/components/home/hero";
 import { TrustBand } from "@/components/home/trust-band";
@@ -58,7 +57,6 @@ type CategoryRow = {
   slug: string;
   name: string;
   nameSi: string;
-  image: string | null;
 };
 
 export default async function HomePage() {
@@ -114,7 +112,7 @@ export default async function HomePage() {
       }),
       prisma.category.findMany({
         where: { slug: { in: CATEGORY_SLUGS } },
-        select: { slug: true, name: true, nameSi: true, image: true },
+        select: { slug: true, name: true, nameSi: true },
       }),
     ]);
 
@@ -147,12 +145,10 @@ export default async function HomePage() {
 
   const categoryCards: CategoryCardItem[] = CATEGORY_SLUGS.map((slug) => {
     const category = categories.find((c) => c.slug === slug);
-    const representative = shuffledProducts.find((p) => p.category.slug === slug);
     return {
       slug,
       name: category?.name ?? slug,
       nameSi: category?.nameSi ?? "",
-      image: category?.image ?? (representative ? getFirstImage(representative.images) : null),
     };
   });
 
