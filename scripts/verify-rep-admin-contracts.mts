@@ -12,6 +12,8 @@
  * and impossible to see in the UI: a non-admin gets nothing, and the roster
  * never carries an unmasked account number.
  */
+import "./db-target-guard.mts";
+
 import assert from "node:assert/strict";
 import bcrypt from "bcryptjs";
 import { encode } from "next-auth/jwt";

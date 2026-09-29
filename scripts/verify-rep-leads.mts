@@ -9,6 +9,8 @@
  * representative's lead, and the payment flow's statuses must not be
  * reachable by hand.
  */
+import "./db-target-guard.mts";
+
 import assert from "node:assert/strict";
 import bcrypt from "bcryptjs";
 import { prisma } from "../src/lib/prisma";

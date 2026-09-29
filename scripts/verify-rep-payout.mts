@@ -11,6 +11,8 @@
  *
  *   DATABASE_URL=... NEXTAUTH_SECRET=... npx tsx scripts/verify-rep-payout.mts
  */
+import "./db-target-guard.mts";
+
 import assert from "node:assert";
 import bcrypt from "bcryptjs";
 import { prisma } from "../src/lib/prisma";
