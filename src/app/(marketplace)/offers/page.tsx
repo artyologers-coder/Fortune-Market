@@ -81,7 +81,7 @@ export default function OffersPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {offers.map((offer) => (
             <div key={offer.id} className="card overflow-hidden">
-              <div className="bg-gradient-to-r from-accent to-accent-600 p-6 text-white">
+              <div className="bg-gradient-to-r from-maroon to-maroon-700 p-6 text-white">
                 <div className="text-4xl font-bold mb-2">{offer.discountPercent}% OFF</div>
                 <h2 className="text-xl font-semibold">{offer.titleSi}</h2>
               </div>

@@ -23,7 +23,7 @@ export function CategoryCards({ cards }: { cards: CategoryCardItem[] }) {
               className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
           ) : (
-            <div className="absolute inset-0 bg-gradient-to-br from-primary-400 to-primary-700" />
+            <div className="absolute inset-0 bg-gradient-to-br from-accent-400 to-primary-600" />
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/15 to-transparent" />
           <div className="absolute inset-x-0 bottom-0 p-4">

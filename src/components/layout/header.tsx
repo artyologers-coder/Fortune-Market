@@ -44,13 +44,19 @@ export function Header() {
 
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
-      <div className="bg-primary-700 text-primary-50">
+      <div className="bg-primary-800 text-accent-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-1.5 sm:py-2 flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-semibold tracking-wide">
           <span aria-hidden="true">🇱🇰</span>
-          <span>Made in Sri Lanka</span>
-          <span className="text-primary-200" aria-hidden="true">·</span>
-          <span className="text-primary-100 font-medium">ලංකාවේ සාදන ලද</span>
+          <span className="text-white">Made in Sri Lanka</span>
+          <span className="text-accent-300" aria-hidden="true">·</span>
+          <span className="text-accent-200 font-medium">ලංකාවේ සාදන ලද</span>
         </div>
+      </div>
+      <div className="flex h-1 w-full" aria-hidden="true">
+        <div className="flex-1 bg-accent-300" />
+        <div className="flex-1 bg-accent-600" />
+        <div className="flex-1 bg-primary-600" />
+        <div className="flex-1 bg-maroon" />
       </div>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
