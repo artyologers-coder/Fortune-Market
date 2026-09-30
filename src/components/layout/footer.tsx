@@ -8,7 +8,7 @@ export function Footer() {
       <div className="flex h-1 w-full" aria-hidden="true">
         <div className="flex-1 bg-accent-300" />
         <div className="flex-1 bg-accent-600" />
-        <div className="flex-1 bg-primary-600" />
+        <div className="flex-1 bg-flag-green" />
         <div className="flex-1 bg-maroon" />
       </div>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
