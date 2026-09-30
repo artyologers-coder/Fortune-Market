@@ -45,7 +45,8 @@ export function Footer() {
             Made in Sri Lanka 🇱🇰 · ලංකාවේ සාදන ලද
           </p>
           <p className="text-sm text-gray-500">
-            © 2026 Fortune Market — A project of Artyologers. All rights reserved.
+            © 2026 Fortune Market — A project of{" "}
+            <span className="text-maroon">Artyologers</span>. All rights reserved.
           </p>
         </div>
       </div>
